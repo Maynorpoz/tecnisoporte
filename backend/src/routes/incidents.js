@@ -1,5 +1,9 @@
 const express = require("express");
-const { validarNuevoIncidente } = require("../validation/incidents");
+const {
+  validarNuevoIncidente,
+  validarPaginacion,
+  validarId
+} = require("../validation/incidents");
 const incidentes = require("../db/incidents");
 
 const router = express.Router();
@@ -28,6 +32,46 @@ router.post("/incidents", async (req, res) => {
 
     console.error("Error al crear incidente:", error);
     return res.status(500).json({ error: "No se pudo crear el incidente" });
+  }
+});
+
+router.get("/incidents", async (req, res) => {
+  const { valido, errores, datos } = validarPaginacion(req.query || {});
+
+  if (!valido) {
+    return res.status(400).json({ error: "Parametros invalidos", detalles: errores });
+  }
+
+  try {
+    const resultado = await incidentes.listar(datos);
+    return res.json(resultado);
+  } catch (error) {
+    console.error("Error al listar incidentes:", error);
+    return res.status(500).json({ error: "No se pudieron listar los incidentes" });
+  }
+});
+
+router.get("/incidents/:id", async (req, res) => {
+  const id = validarId(req.params.id);
+
+  if (id === null) {
+    return res.status(400).json({
+      error: "Parametros invalidos",
+      detalles: [{ campo: "id", mensaje: "El id debe ser un entero positivo" }]
+    });
+  }
+
+  try {
+    const incidente = await incidentes.obtenerPorId(id);
+
+    if (!incidente) {
+      return res.status(404).json({ error: "Incidente no encontrado" });
+    }
+
+    return res.json(incidente);
+  } catch (error) {
+    console.error("Error al obtener incidente:", error);
+    return res.status(500).json({ error: "No se pudo obtener el incidente" });
   }
 });
 
