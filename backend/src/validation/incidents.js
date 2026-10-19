@@ -80,4 +80,61 @@ function validarNuevoIncidente(body) {
   return { valido: errores.length === 0, errores, datos };
 }
 
-module.exports = { validarNuevoIncidente, TITULO_MIN, TITULO_MAX, DESCRIPCION_MIN };
+const PAGE_SIZE_POR_DEFECTO = 20;
+const PAGE_SIZE_MAX = 100;
+
+// Los query params siempre llegan como texto, asi que hay que convertir
+// antes de comparar. Un valor ausente toma el default; uno invalido es
+// error, porque ?page=abc casi siempre es un bug del cliente y es peor
+// devolverle la pagina 1 en silencio.
+function aEnteroPositivo(valor) {
+  if (valor === undefined || valor === "") return undefined;
+  if (!/^\d+$/.test(String(valor))) return null;
+  const numero = Number(valor);
+  return numero >= 1 ? numero : null;
+}
+
+function validarPaginacion(query) {
+  const errores = [];
+  const datos = {};
+
+  const page = aEnteroPositivo(query.page);
+  if (page === null) {
+    errores.push({ campo: "page", mensaje: "page debe ser un entero mayor o igual a 1" });
+  } else {
+    datos.page = page === undefined ? 1 : page;
+  }
+
+  const pageSize = aEnteroPositivo(query.pageSize);
+  if (pageSize === null) {
+    errores.push({
+      campo: "pageSize",
+      mensaje: `pageSize debe ser un entero entre 1 y ${PAGE_SIZE_MAX}`
+    });
+  } else if (pageSize !== undefined && pageSize > PAGE_SIZE_MAX) {
+    errores.push({
+      campo: "pageSize",
+      mensaje: `pageSize no puede ser mayor a ${PAGE_SIZE_MAX}`
+    });
+  } else {
+    datos.pageSize = pageSize === undefined ? PAGE_SIZE_POR_DEFECTO : pageSize;
+  }
+
+  return { valido: errores.length === 0, errores, datos };
+}
+
+function validarId(valor) {
+  const id = aEnteroPositivo(valor);
+  return id === null || id === undefined ? null : id;
+}
+
+module.exports = {
+  validarNuevoIncidente,
+  validarPaginacion,
+  validarId,
+  TITULO_MIN,
+  TITULO_MAX,
+  DESCRIPCION_MIN,
+  PAGE_SIZE_POR_DEFECTO,
+  PAGE_SIZE_MAX
+};
