@@ -1,20 +1,63 @@
-# Introduction 
-TODO: Give a short introduction of your project. Let this section explain the objectives or the motivation behind this project. 
+# IT Incident Hub
 
-# Getting Started
-TODO: Guide users through getting your code up and running on their own system. In this section you can talk about:
-1.	Installation process
-2.	Software dependencies
-3.	Latest releases
-4.	API references
+Sistema web de gestión de incidentes de TI. Proyecto integrador DevOps — Análisis de Sistemas II, Universidad Mariano Gálvez.
 
-# Build and Test
-TODO: Describe and show how to build your code and run the tests. 
+> Este README se completa en la semana 3 (Task *"Actualizar README y ensayar la demo de punta a punta"*). Por ahora cubre lo mínimo para levantar el proyecto.
 
-# Contribute
-TODO: Explain how other users and developers can contribute to make your code better. 
+## Stack
 
-If you want to learn more about creating good readme files then refer the following [guidelines](https://docs.microsoft.com/en-us/azure/devops/repos/git/create-a-readme?view=azure-devops). You can also seek inspiration from the below readme files:
-- [ASP.NET Core](https://github.com/aspnet/Home)
-- [Visual Studio Code](https://github.com/Microsoft/vscode)
-- [Chakra Core](https://github.com/Microsoft/ChakraCore)
+| Capa | Tecnología |
+|---|---|
+| Frontend | React + Vite |
+| Backend | Node.js + Express |
+| Base de datos | PostgreSQL 16 (Docker) |
+| Pruebas | Jest + Supertest |
+| CI/CD | Azure Pipelines (self-hosted agent) + GitHub Actions |
+
+## Requisitos
+
+- Node.js 20 o superior
+- Docker y Docker Compose
+- Git
+
+## Instalación
+
+```bash
+git clone <url-del-repo>
+cd incident-hub
+
+# Variables de entorno
+cp .env.example .env
+# edita .env y pon tus valores locales
+
+# Base de datos
+docker compose -f devops/docker-compose.yml up -d
+
+# Backend
+cd backend && npm ci
+```
+
+## Ejecución
+
+```bash
+# Backend (desde backend/)
+npm run dev          # http://localhost:3000
+curl http://localhost:3000/api/health
+```
+
+## Scripts
+
+| Comando | Qué hace |
+|---|---|
+| `npm run dev` | Levanta la API con recarga automática |
+| `npm start` | Levanta la API |
+| `npm test` | Corre la suite de pruebas |
+| `npm run lint` | Analiza el código con ESLint |
+
+## Documentación
+
+Toda la documentación del proceso está en [`docs/`](docs/): arquitectura, convención de ramas, deuda técnica, seguridad, dependencias y estrategia de release.
+
+## Responsable
+
+Maynor Amílcar Poz Hernández — carné 2323759

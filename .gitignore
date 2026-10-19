@@ -1,0 +1,36 @@
+# Dependencias
+node_modules/
+
+# Variables de entorno: el .env REAL nunca se sube (regla 3 del proyecto)
+.env
+.env.local
+.env.*.local
+
+# Build
+dist/
+build/
+coverage/
+*.tsbuildinfo
+
+# Artefactos del pipeline
+artifacts/
+*.tgz
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+
+# Agente autohospedado de Azure Pipelines
+_work/
+agent/
+.agent
+
+# Sistema operativo
+.DS_Store
+Thumbs.db
+
+# Editores
+.vscode/
+.idea/
+*.swp

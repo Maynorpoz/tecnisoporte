@@ -1,0 +1,18 @@
+# Normaliza los finales de linea a LF dentro del repositorio.
+# Importante: el self-hosted agent corre en Ubuntu, y un script con
+# finales CRLF falla ahi con errores confusos.
+* text=auto eol=lf
+
+# Scripts que siempre deben ir con LF
+*.sh   text eol=lf
+*.yml  text eol=lf
+*.yaml text eol=lf
+
+# Scripts de Windows que siempre deben ir con CRLF
+*.ps1 text eol=crlf
+*.bat text eol=crlf
+
+# Binarios: que Git no los toque
+*.png  binary
+*.jpg  binary
+*.pdf  binary
