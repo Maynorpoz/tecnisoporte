@@ -47,7 +47,9 @@ Todo el stack se levanta con un solo `docker compose up`: base de datos, API y f
 
 Esto además me sirve para la estrategia de release de la semana 3, porque el "deploy" a cada ambiente puede ser levantar el stack con Docker a partir del artefacto publicado, sin necesidad de desplegar en la nube.
 
-Por ahora el `docker-compose.yml` solo tiene PostgreSQL, porque el frontend todavía no existe. Los servicios de API y frontend se agregan cuando esté el andamiaje de Vite, en su propia Task.
+El frontend se construye en dos etapas: una con node que compila, y otra con nginx que solo sirve los archivos ya compilados. La imagen final no carga con node ni con node_modules. Una cosa que hay que tener presente es que Vite incrusta las variables `VITE_*` en el bundle en tiempo de build, no de arranque, así que la URL de la API entra como argumento del build y cambiarla obliga a reconstruir la imagen.
+
+Los puertos publicados son 5435 para Postgres, 3100 para la API y 5173 para el frontend. No son los de por defecto porque en la máquina de desarrollo hay otros proyectos ocupando el 5432 y el 3000.
 
 ## Configuración y secretos
 
