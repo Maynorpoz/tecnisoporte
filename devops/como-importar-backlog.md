@@ -1,8 +1,10 @@
 # Cómo importar el backlog a Azure Boards
 
+> Nota: estos pasos ya se ejecutaron el 18 de octubre de 2026. El documento se conserva como registro de cómo se cargó el backlog, no como tarea pendiente.
+
 ## 0. Antes de importar
 
-1. Crear el proyecto `incident-hub` dentro de la organización existente `dev.azure.com/devopsmaynor`
+1. Crear el proyecto `incident` dentro de la organización existente `dev.azure.com/devopsmaynor`
    - Visibilidad: privado
    - **Work item process: Agile** — el selector está escondido bajo **Advanced**. Si lo dejas por defecto puede crearte un proyecto con proceso *Basic*, que solo tiene Epic/Issue/Task y no User Story ni Feature, y entonces la importación del CSV falla.
 

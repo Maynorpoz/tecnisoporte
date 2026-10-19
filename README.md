@@ -1,8 +1,8 @@
-# IT Incident
+# TecniSoporte
 
 Sistema web de gestión de incidentes de TI. Proyecto integrador DevOps — Análisis de Sistemas II, Universidad Mariano Gálvez.
 
-> Este README se completa en la semana 3 (Task *"Actualizar README y ensayar la demo de punta a punta"*). Por ahora cubre lo mínimo para levantar el proyecto.
+> El README se completa en la semana 3 (Task *"Actualizar README y ensayar la demo de punta a punta"*). Por ahora cubre cómo levantar el proyecto y qué expone la API.
 
 ## Stack
 
@@ -75,6 +75,37 @@ El frontend lee la URL de la API de `frontend/.env`; copia el `.env.example` de 
 | backend | `npm run lint` | Analiza el código con ESLint |
 | frontend | `npm run dev` | Levanta Vite con recarga automática |
 | frontend | `npm run build` | Compila a `dist/` |
+
+## API
+
+Todo cuelga de `/api`. Por ejemplo, el listado es `http://localhost:3100/api/incidents`.
+
+| Método | Ruta | Qué hace |
+|---|---|---|
+| GET | `/health` | Dice si la API responde y si alcanza la base |
+| POST | `/incidents` | Crea un incidente. Devuelve 400 con el campo que falló |
+| GET | `/incidents` | Listado paginado con `page` y `pageSize` |
+| GET | `/incidents/:id` | Detalle. 404 si no existe |
+| PATCH | `/incidents/:id/asignar` | Asigna técnico y mueve el incidente a ASIGNADO |
+| PATCH | `/incidents/:id/estado` | Cambia el estado. 409 si la transición no es válida |
+| GET | `/users` | Usuarios que pueden reportar |
+| GET | `/technicians` | Técnicos activos |
+
+### Estados de un incidente
+
+```
+NUEVO → ASIGNADO → EN_PROCESO → RESUELTO → CERRADO
+```
+
+El flujo es de un solo sentido. Cualquier otro salto responde 409, e incluye en la respuesta el estado actual y las transiciones que sí son posibles.
+
+### Ejemplo
+
+```bash
+curl -X POST http://localhost:3100/api/incidents \
+  -H "Content-Type: application/json" \
+  -d '{"titulo":"No tengo internet","descripcion":"Ninguna maquina del area conecta.","categoria":"RED","prioridad":"ALTA","usuario_id":1}'
+```
 
 ## Documentación
 

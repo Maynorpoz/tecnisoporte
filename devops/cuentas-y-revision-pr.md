@@ -7,7 +7,7 @@ El catedrático autorizó trabajar con una sola cuenta por ser proyecto individu
 | Qué | Valor |
 |---|---|
 | Organización | `dev.azure.com/devopsmaynor` |
-| Proyecto | `incident-hub` (nuevo, dentro de esa organización) |
+| Proyecto | `incident` (nuevo, dentro de esa organización) |
 | Usuario único | `mpozh@miumg.edu.gt` |
 
 No hace falta crear cuentas adicionales ni verificar si la organización está conectada al directorio Entra de la UMG: esa restricción solo afectaba la invitación de usuarios externos, y ya no vas a invitar a nadie.
@@ -18,7 +18,7 @@ El punto 4 del PDF pide *"mínimo 6 PR reales, con descripción, revisión y evi
 
 ### Políticas de rama a configurar en `main`
 
-*Project Settings → Repositories → `incident-hub` → Policies → Branch Policies → main*
+*Project Settings → Repositories → `incident` → Policies → Branch Policies → main*
 
 | Política | Configuración | Qué evidencia produce |
 |---|---|---|

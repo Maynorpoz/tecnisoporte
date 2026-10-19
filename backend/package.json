@@ -1,8 +1,8 @@
 {
-  "name": "incident-hub-backend",
+  "name": "tecnisoporte-backend",
   "version": "0.0.0",
   "private": true,
-  "description": "API REST del IT Incident Hub",
+  "description": "API REST de TecniSoporte",
   "main": "src/server.js",
   "engines": {
     "node": ">=20"
