@@ -11,6 +11,10 @@ services:
       - "5432:5432"
     volumes:
       - incident_hub_data:/var/lib/postgresql/data
+      # Postgres ejecuta en orden los .sql de esta carpeta, pero solo la
+      # primera vez que se crea el volumen. Para recargar el esquema hay
+      # que bajar el stack con -v.
+      - ../database:/docker-entrypoint-initdb.d:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U incident_user -d incident_hub"]
       interval: 10s

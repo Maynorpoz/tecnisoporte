@@ -24,7 +24,7 @@ Sistema web de gestión de incidentes de TI. Proyecto integrador DevOps — Aná
 
 ```bash
 git clone <url-del-repo>
-cd incident-hub
+cd incident
 
 # Variables de entorno
 cp .env.example .env
