@@ -1,0 +1,152 @@
+# Pipeline de integracion continua de TecniSoporte.
+#
+# Corre en el agente autohospedado del pool tecnisoporte-local, que es
+# la maquina de desarrollo. Por eso el agente necesita tener instalados
+# node, npm, git y Docker: lo que no este ahi, falla.
+
+trigger:
+  branches:
+    include:
+      - main
+
+pr:
+  branches:
+    include:
+      - main
+
+pool:
+  name: tecnisoporte-local
+
+variables:
+  # Las credenciales viven en un Variable Group de Azure DevOps, nunca
+  # en este archivo. Ver devops/variable-group.md
+  - group: tecnisoporte-ci
+  - name: PUERTO_DB_PRUEBAS
+    value: "5436"
+
+stages:
+  - stage: CI
+    displayName: Build, pruebas y empaquetado
+    jobs:
+      - job: construir
+        displayName: Construir y validar
+        timeoutInMinutes: 20
+
+        steps:
+          - checkout: self
+            displayName: Traer el codigo
+            clean: true
+
+          - script: |
+              echo "Agente:  $(Agent.Name)"
+              echo "Rama:    $(Build.SourceBranchName)"
+              node --version
+              npm --version
+              docker --version
+            displayName: Diagnostico del agente
+
+          # ---------- Instalacion ----------
+
+          - script: npm ci
+            displayName: Instalar dependencias del backend
+            workingDirectory: backend
+
+          - script: npm ci
+            displayName: Instalar dependencias del frontend
+            workingDirectory: frontend
+
+          # ---------- Calidad ----------
+
+          - script: npm run lint
+            displayName: Lint del backend
+            workingDirectory: backend
+
+          - script: npm run build
+            displayName: Compilar el frontend
+            workingDirectory: frontend
+
+          # ---------- Pruebas ----------
+
+          # El pipeline levanta su propia base. Si dependiera de que haya
+          # una corriendo en la maquina, el resultado no seria
+          # reproducible y un verde no significaria nada.
+          - script: docker compose -f devops/docker-compose.test.yml up -d --wait
+            displayName: Levantar base de datos de pruebas
+            env:
+              POSTGRES_PASSWORD: $(POSTGRES_PASSWORD)
+
+          - script: npm test
+            displayName: Correr las pruebas
+            workingDirectory: backend
+            env:
+              # Se arma aqui a partir del secreto del Variable Group, para
+              # no guardar la cadena completa con la contrasena adentro.
+              TEST_DATABASE_URL: postgresql://incident_user:$(POSTGRES_PASSWORD)@localhost:$(PUERTO_DB_PRUEBAS)/tecnisoporte_test
+
+          - task: PublishTestResults@2
+            displayName: Publicar resultados de las pruebas
+            condition: succeededOrFailed()
+            inputs:
+              testResultsFormat: JUnit
+              testResultsFiles: "test-results/junit.xml"
+              testRunTitle: "Pruebas de TecniSoporte"
+              failTaskOnFailedTests: true
+
+          # Se baja con -v aunque las pruebas hayan fallado, para no
+          # dejar el contenedor ocupando el puerto en la siguiente corrida.
+          - script: docker compose -f devops/docker-compose.test.yml down -v
+            displayName: Bajar base de datos de pruebas
+            condition: always()
+            env:
+              POSTGRES_PASSWORD: $(POSTGRES_PASSWORD)
+
+          # ---------- Dependencias ----------
+
+          # Solo detiene el pipeline ante vulnerabilidades criticas. Las
+          # de severidad menor se documentan y se deciden en
+          # docs/dependencias.md, no bloquean la entrega.
+          - script: |
+              npm audit --json > "$(Build.ArtifactStagingDirectory)/audit-backend.json" || true
+              npm audit --audit-level=critical
+            displayName: Revisar dependencias del backend
+            workingDirectory: backend
+
+          - script: |
+              npm audit --json > "$(Build.ArtifactStagingDirectory)/audit-frontend.json" || true
+              npm audit --audit-level=critical
+            displayName: Revisar dependencias del frontend
+            workingDirectory: frontend
+
+          # ---------- Empaquetado ----------
+
+          # Solo lo que se desplegaria. Sin node_modules ni .git: el
+          # artefacto debe ser lo que corre, no una copia del repositorio.
+          - task: CopyFiles@2
+            displayName: Reunir los archivos del paquete
+            inputs:
+              SourceFolder: "$(Build.SourcesDirectory)"
+              Contents: |
+                backend/src/**
+                backend/package.json
+                backend/package-lock.json
+                backend/Dockerfile
+                frontend/dist/**
+                frontend/Dockerfile
+                frontend/nginx.conf
+                database/**
+                devops/docker-compose.yml
+                README.md
+              TargetFolder: "$(Build.BinariesDirectory)/paquete"
+
+          - task: ArchiveFiles@2
+            displayName: Empaquetar la aplicacion
+            inputs:
+              rootFolderOrFile: "$(Build.BinariesDirectory)/paquete"
+              includeRootFolder: false
+              archiveType: zip
+              archiveFile: "$(Build.ArtifactStagingDirectory)/tecnisoporte-$(Build.BuildId).zip"
+              replaceExistingArchive: true
+
+          - publish: "$(Build.ArtifactStagingDirectory)"
+            displayName: Publicar el artefacto
+            artifact: tecnisoporte

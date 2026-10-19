@@ -1,0 +1,29 @@
+# Base de datos efimera para las pruebas del pipeline.
+#
+# Es un stack aparte del de desarrollo: otro nombre de proyecto, otro
+# contenedor y otro puerto. Asi el pipeline puede levantarla y botarla
+# sin tocar la base con la que se esta trabajando en el 5435.
+#
+# No monta database/ como scripts de arranque a proposito: el esquema lo
+# aplican las propias pruebas, de modo que siempre corren contra la
+# version del esquema que esta en el repositorio.
+
+name: tecnisoporte-ci
+
+services:
+  db-test:
+    image: postgres:16-alpine
+    container_name: tecnisoporte-db-test
+    environment:
+      POSTGRES_DB: tecnisoporte_test
+      POSTGRES_USER: incident_user
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    ports:
+      - "5436:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U incident_user -d tecnisoporte_test"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+    # Sin volumen con nombre: los datos viven mientras viva el contenedor
+    # y desaparecen al bajarlo. Es lo que se quiere para pruebas.
