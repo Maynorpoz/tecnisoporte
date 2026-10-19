@@ -70,4 +70,38 @@ async function obtenerPorId(id) {
   return rows[0] || null;
 }
 
-module.exports = { crear, listar, obtenerPorId };
+// Asignar implica mover el incidente a ASIGNADO cuando venia de NUEVO.
+// La restriccion de la base exige que todo lo que pase de NUEVO tenga
+// tecnico, asi que las dos cosas van en la misma sentencia y no pueden
+// quedar a medias.
+const SQL_ASIGNAR = `
+  UPDATE incidents
+  SET tecnico_id = $2,
+      estado = CASE WHEN estado = 'NUEVO' THEN 'ASIGNADO'::estado_incidente ELSE estado END
+  WHERE id = $1
+  RETURNING id
+`;
+
+async function asignarTecnico(id, tecnicoId) {
+  const { rowCount } = await pool.query(SQL_ASIGNAR, [id, tecnicoId]);
+  return rowCount > 0 ? obtenerPorId(id) : null;
+}
+
+// La columna de fecha se arma aqui y no viene del cliente. El dominio
+// decide cual toca segun el estado, y solo puede devolver resuelto_en,
+// cerrado_en o nada, asi que no hay forma de inyectar un nombre
+// arbitrario en el SQL.
+async function cambiarEstado(id, nuevoEstado, columnaFecha) {
+  const sql = `
+    UPDATE incidents
+    SET estado = $2::estado_incidente
+        ${columnaFecha ? `, ${columnaFecha} = now()` : ""}
+    WHERE id = $1
+    RETURNING id
+  `;
+
+  const { rowCount } = await pool.query(sql, [id, nuevoEstado]);
+  return rowCount > 0 ? obtenerPorId(id) : null;
+}
+
+module.exports = { crear, listar, obtenerPorId, asignarTecnico, cambiarEstado };
