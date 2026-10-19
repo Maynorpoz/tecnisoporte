@@ -1,4 +1,4 @@
-# IT Incident Hub
+# IT Incident
 
 Sistema web de gestión de incidentes de TI. Proyecto integrador DevOps — Análisis de Sistemas II, Universidad Mariano Gálvez.
 
@@ -20,39 +20,61 @@ Sistema web de gestión de incidentes de TI. Proyecto integrador DevOps — Aná
 - Docker y Docker Compose
 - Git
 
-## Instalación
+## Puertos
+
+No son los de por defecto, porque en la máquina de desarrollo hay otros proyectos ocupando el 5432 y el 3000.
+
+| Servicio | Puerto |
+|---|---|
+| Frontend | 5173 |
+| API | 3100 |
+| PostgreSQL | 5435 |
+
+## Todo con Docker
+
+Es la forma más rápida de ver el sistema funcionando. Levanta base, API y frontend.
 
 ```bash
 git clone <url-del-repo>
 cd incident
 
-# Variables de entorno
 cp .env.example .env
 # edita .env y pon tus valores locales
 
-# Base de datos
-docker compose --env-file .env -f devops/docker-compose.yml up -d
-
-# Backend
-cd backend && npm ci
+docker compose --env-file .env -f devops/docker-compose.yml up -d --build
 ```
 
-## Ejecución
+Luego abre <http://localhost:5173>.
+
+El `--env-file .env` es necesario: sin él, Compose busca el archivo junto al `docker-compose.yml`, que está en `devops/`, y la contraseña de Postgres queda vacía.
+
+## En modo desarrollo
+
+Útil cuando se está programando, porque trae recarga automática.
 
 ```bash
-# Backend (desde backend/)
-npm run dev          # http://localhost:3100
-curl http://localhost:3100/api/health
+# Solo la base de datos en Docker
+docker compose --env-file .env -f devops/docker-compose.yml up -d db
+
+# Backend, en una terminal
+cd backend && npm ci && npm run dev     # http://localhost:3100
+
+# Frontend, en otra terminal
+cd frontend && npm ci && npm run dev    # http://localhost:5173
 ```
+
+El frontend lee la URL de la API de `frontend/.env`; copia el `.env.example` de esa carpeta si no existe.
 
 ## Scripts
 
-| Comando | Qué hace |
-|---|---|
-| `npm run dev` | Levanta la API con recarga automática |
-| `npm start` | Levanta la API |
-| `npm test` | Corre la suite de pruebas |
-| `npm run lint` | Analiza el código con ESLint |
+| Carpeta | Comando | Qué hace |
+|---|---|---|
+| backend | `npm run dev` | Levanta la API con recarga automática |
+| backend | `npm start` | Levanta la API |
+| backend | `npm test` | Corre la suite de pruebas |
+| backend | `npm run lint` | Analiza el código con ESLint |
+| frontend | `npm run dev` | Levanta Vite con recarga automática |
+| frontend | `npm run build` | Compila a `dist/` |
 
 ## Documentación
 
