@@ -31,7 +31,7 @@ cp .env.example .env
 # edita .env y pon tus valores locales
 
 # Base de datos
-docker compose -f devops/docker-compose.yml up -d
+docker compose --env-file .env -f devops/docker-compose.yml up -d
 
 # Backend
 cd backend && npm ci
