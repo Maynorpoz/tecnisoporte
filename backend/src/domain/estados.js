@@ -6,7 +6,7 @@ const { ESTADOS } = require("./incidents");
 // necesitara, habria que agregar RESUELTO -> EN_PROCESO aqui y un motivo
 // de reapertura en la base.
 const TRANSICIONES = {
-  NUEVO: ["ASIGNADO"],
+  NUEVO: ["ASIGNADO", "RESUELTO"],
   ASIGNADO: ["EN_PROCESO"],
   EN_PROCESO: ["RESUELTO"],
   RESUELTO: ["CERRADO"],
