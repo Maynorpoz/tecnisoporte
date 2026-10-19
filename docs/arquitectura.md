@@ -1,6 +1,6 @@
 # Arquitectura
 
-El IT Incident Hub son tres piezas: una aplicación React que corre en el navegador, una API REST en Node con Express, y PostgreSQL guardando los datos. Nada más. La arquitectura es simple a propósito, porque lo que se califica es el proceso DevOps, no la complejidad de la solución.
+TecniSoporte son tres piezas: una aplicación React que corre en el navegador, una API REST en Node con Express, y PostgreSQL guardando los datos. Nada más. La arquitectura es simple a propósito, porque lo que se califica es el proceso DevOps, no la complejidad de la solución.
 
 ```mermaid
 flowchart LR

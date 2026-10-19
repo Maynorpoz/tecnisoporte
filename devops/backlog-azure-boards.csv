@@ -1,5 +1,5 @@
 Work Item Type,Title 1,Title 2,Title 3,Title 4,Assigned To,State,Priority,Story Points,Original Estimate,Tags,Description
-Epic,Gestion de Incidentes,,,,mpozh@miumg.edu.gt,New,1,,,Funcional,"Modulo funcional del IT Incident Hub: registro, operacion, seguimiento e indicadores de incidentes."
+Epic,Gestion de Incidentes,,,,mpozh@miumg.edu.gt,New,1,,,Funcional,"Modulo funcional de TecniSoporte: registro, operacion, seguimiento e indicadores de incidentes."
 Feature,,Registro y consulta de incidentes,,,mpozh@miumg.edu.gt,New,1,,,Funcional; S1,"Alta de incidentes con titulo, descripcion, categoria, prioridad, usuario, fecha y estado; listado y detalle."
 User Story,,,Como usuario reporto un incidente para que quede trazable,,mpozh@miumg.edu.gt,New,1,5,,S1,"Criterio: el incidente se guarda con titulo, descripcion, categoria, prioridad, usuario, fecha y estado inicial NUEVO."
 Task,,,,"Crear script de esquema en database/ (incidents, technicians, users, comments)",mpozh@miumg.edu.gt,New,1,,5,S1; backend,"Script SQL con PK/FK, enums de estado y prioridad, e indices iniciales. Rama feature/db-schema."

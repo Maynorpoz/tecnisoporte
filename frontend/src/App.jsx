@@ -8,7 +8,7 @@ export default function App() {
     <div className="app">
       <header className="barra">
         <Link to="/" className="marca">
-          IT Incident Hub
+          TecniSoporte
         </Link>
         <nav>
           <NavLink to="/" end>

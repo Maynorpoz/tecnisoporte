@@ -1,4 +1,4 @@
--- Esquema del IT Incident Hub
+-- Esquema de TecniSoporte
 -- Se ejecuta solo la primera vez que arranca el contenedor de Postgres,
 -- porque docker-compose monta esta carpeta en /docker-entrypoint-initdb.d
 
