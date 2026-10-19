@@ -5,8 +5,13 @@ const { ESTADOS } = require("./incidents");
 // documento del proyecto describe el flujo en un solo sentido; si se
 // necesitara, habria que agregar RESUELTO -> EN_PROCESO aqui y un motivo
 // de reapertura en la base.
+//
+// Tampoco se permite resolver directo desde NUEVO. Se intento en el PR
+// !11 y las pruebas lo detuvieron: ademas de romper el flujo lineal,
+// cambiaba el contrato del endpoint de estado, que devuelve la lista de
+// transiciones posibles. Ver el Bug AB#47.
 const TRANSICIONES = {
-  NUEVO: ["ASIGNADO", "RESUELTO"],
+  NUEVO: ["ASIGNADO"],
   ASIGNADO: ["EN_PROCESO"],
   EN_PROCESO: ["RESUELTO"],
   RESUELTO: ["CERRADO"],
