@@ -41,8 +41,8 @@ cd backend && npm ci
 
 ```bash
 # Backend (desde backend/)
-npm run dev          # http://localhost:3000
-curl http://localhost:3000/api/health
+npm run dev          # http://localhost:3100
+curl http://localhost:3100/api/health
 ```
 
 ## Scripts

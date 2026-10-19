@@ -1,3 +1,7 @@
+# Nombre del proyecto de compose, para no mezclarse con los otros
+# stacks que corren en esta maquina.
+name: incident-hub
+
 services:
   db:
     image: postgres:16-alpine
@@ -8,7 +12,7 @@ services:
       POSTGRES_USER: incident_user
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     ports:
-      - "5432:5432"
+      - "5435:5432"
     volumes:
       - incident_hub_data:/var/lib/postgresql/data
       # Postgres ejecuta en orden los .sql de esta carpeta, pero solo la
