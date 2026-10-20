@@ -74,7 +74,13 @@ router.get("/incidents/:id", async (req, res) => {
       return res.status(404).json({ error: "Incidente no encontrado" });
     }
 
-    return res.json(incidente);
+    // Se incluye a donde puede moverse el incidente para que el frontend
+    // no tenga que repetir la maquina de estados. Si manana cambia una
+    // regla aqui, la interfaz se ajusta sola.
+    return res.json({
+      ...incidente,
+      transiciones_posibles: siguientesEstados(incidente.estado)
+    });
   } catch (error) {
     console.error("Error al obtener incidente:", error);
     return res.status(500).json({ error: "No se pudo obtener el incidente" });

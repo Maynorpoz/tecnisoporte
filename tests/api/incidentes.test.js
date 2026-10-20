@@ -138,6 +138,32 @@ describe("GET /api/incidents/:id", () => {
     expect(res.body.titulo).toBe("Incidente para el detalle");
   });
 
+  // El frontend dibuja los botones de cambio de estado con esto, asi que
+  // no tiene que repetir la maquina de estados.
+  it("incluye las transiciones posibles desde el estado actual", async () => {
+    const creado = await crearIncidente();
+
+    const res = await request(app).get(`/api/incidents/${creado.id}`);
+
+    expect(res.body.estado).toBe("NUEVO");
+    expect(res.body.transiciones_posibles).toEqual(["ASIGNADO"]);
+  });
+
+  it("un incidente CERRADO no ofrece transiciones", async () => {
+    const creado = await crearIncidente();
+    const url = `/api/incidents/${creado.id}`;
+
+    await request(app).patch(`${url}/asignar`).send({ tecnico_id: 1 });
+    await request(app).patch(`${url}/estado`).send({ estado: "EN_PROCESO" });
+    await request(app).patch(`${url}/estado`).send({ estado: "RESUELTO" });
+    await request(app).patch(`${url}/estado`).send({ estado: "CERRADO" });
+
+    const res = await request(app).get(url);
+
+    expect(res.body.estado).toBe("CERRADO");
+    expect(res.body.transiciones_posibles).toEqual([]);
+  });
+
   it("devuelve 404 si no existe", async () => {
     const res = await request(app).get("/api/incidents/9999");
     expect(res.status).toBe(404);
