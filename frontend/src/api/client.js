@@ -43,10 +43,20 @@ export const api = {
       body: JSON.stringify({ tecnico_id: tecnicoId })
     }),
 
-  cambiarEstado: (id, estado) =>
+  // La nota es opcional salvo al resolver, pero esa regla la aplica el
+  // backend. Aqui solo se manda lo que el usuario haya escrito.
+  cambiarEstado: (id, estado, nota) =>
     pedir(`/incidents/${id}/estado`, {
       method: "PATCH",
-      body: JSON.stringify({ estado })
+      body: JSON.stringify({ estado, nota: nota || undefined })
+    }),
+
+  listarComentarios: (id) => pedir(`/incidents/${id}/comments`),
+
+  crearComentario: (id, { autor, cuerpo }) =>
+    pedir(`/incidents/${id}/comments`, {
+      method: "POST",
+      body: JSON.stringify({ autor, cuerpo })
     }),
 
   listarUsuarios: () => pedir("/users"),

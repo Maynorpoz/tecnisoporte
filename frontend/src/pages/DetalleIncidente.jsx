@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { api } from "../api/client.js";
+import Bitacora from "../components/Bitacora.jsx";
 
 function fecha(valor) {
   if (!valor) return "—";
@@ -20,18 +21,26 @@ const ETIQUETA_ESTADO = {
 export default function DetalleIncidente() {
   const { id } = useParams();
   const [incidente, setIncidente] = useState(null);
-  const [tecnicos, setTecnicos] = useState([]);
+  const [comentarios, setComentarios] = useState([]);
+  const [personas, setPersonas] = useState({ usuarios: [], tecnicos: [] });
   const [tecnicoElegido, setTecnicoElegido] = useState("");
+  const [nota, setNota] = useState("");
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState(null);
   const [accionEnCurso, setAccionEnCurso] = useState(null);
   const [errorAccion, setErrorAccion] = useState(null);
 
-  const cargar = useCallback(async () => {
-    const datos = await api.obtenerIncidente(id);
+  // Tras cualquier accion hay que releer las dos cosas: el incidente
+  // cambio de estado y la bitacora pudo ganar una entrada automatica.
+  const recargar = useCallback(async () => {
+    const [datos, lista] = await Promise.all([
+      api.obtenerIncidente(id),
+      api.listarComentarios(id)
+    ]);
     setIncidente(datos);
+    setComentarios(lista);
     setTecnicoElegido(datos.tecnico_id ? String(datos.tecnico_id) : "");
-    return datos;
+    setNota("");
   }, [id]);
 
   useEffect(() => {
@@ -40,11 +49,17 @@ export default function DetalleIncidente() {
     setCargando(true);
     setError(null);
 
-    Promise.all([api.obtenerIncidente(id), api.listarTecnicos()])
-      .then(([datos, listaTecnicos]) => {
+    Promise.all([
+      api.obtenerIncidente(id),
+      api.listarComentarios(id),
+      api.listarUsuarios(),
+      api.listarTecnicos()
+    ])
+      .then(([datos, lista, usuarios, tecnicos]) => {
         if (cancelado) return;
         setIncidente(datos);
-        setTecnicos(listaTecnicos);
+        setComentarios(lista);
+        setPersonas({ usuarios, tecnicos });
         setTecnicoElegido(datos.tecnico_id ? String(datos.tecnico_id) : "");
       })
       .catch((e) => {
@@ -68,7 +83,7 @@ export default function DetalleIncidente() {
     setErrorAccion(null);
     try {
       await api.asignarTecnico(id, Number(tecnicoElegido));
-      await cargar();
+      await recargar();
     } catch (e) {
       setErrorAccion(e.detalles?.[0]?.mensaje || e.message);
     } finally {
@@ -80,16 +95,19 @@ export default function DetalleIncidente() {
     setAccionEnCurso(estado);
     setErrorAccion(null);
     try {
-      await api.cambiarEstado(id, estado);
-      await cargar();
+      await api.cambiarEstado(id, estado, nota);
+      await recargar();
     } catch (e) {
-      setErrorAccion(e.message);
-      // Si el rechazo trae las transiciones validas, se refresca para
-      // que los botones reflejen el estado real.
-      if (e.transicionesPosibles) await cargar();
+      setErrorAccion(e.detalles?.[0]?.mensaje || e.message);
+      if (e.transicionesPosibles) await recargar();
     } finally {
       setAccionEnCurso(null);
     }
+  }
+
+  async function agregarComentario({ autor, cuerpo }) {
+    await api.crearComentario(id, { autor, cuerpo });
+    setComentarios(await api.listarComentarios(id));
   }
 
   if (cargando) return <p className="aviso">Cargando…</p>;
@@ -103,6 +121,9 @@ export default function DetalleIncidente() {
 
   const cerrado = incidente.estado === "CERRADO";
   const transiciones = incidente.transiciones_posibles || [];
+  // Quien exige la nota es el backend. Aqui solo se avisa de antemano
+  // para no dejar que la persona escriba y se lleve el rechazo despues.
+  const vaAResolver = transiciones.includes("RESUELTO");
 
   return (
     <section>
@@ -145,7 +166,7 @@ export default function DetalleIncidente() {
                 onChange={(e) => setTecnicoElegido(e.target.value)}
               >
                 <option value="">Selecciona un técnico</option>
-                {tecnicos.map((t) => (
+                {personas.tecnicos.map((t) => (
                   <option key={t.id} value={t.id}>
                     {t.nombre}
                     {t.especialidad ? ` — ${t.especialidad}` : ""}
@@ -174,25 +195,44 @@ export default function DetalleIncidente() {
               y ya no cambia de estado.
             </p>
           ) : (
-            <div className="fila-accion">
-              {/* Los botones salen de lo que responde la API, no de una
-                  lista escrita aqui. Si cambia una regla en el backend,
-                  esto se ajusta solo. */}
-              {transiciones.map((estado) => (
-                <button
-                  key={estado}
-                  onClick={() => moverA(estado)}
-                  disabled={accionEnCurso !== null}
-                >
-                  {accionEnCurso === estado
-                    ? "Cambiando…"
-                    : `Pasar a ${ETIQUETA_ESTADO[estado]}`}
-                </button>
-              ))}
-            </div>
+            <>
+              <textarea
+                rows={2}
+                value={nota}
+                onChange={(e) => setNota(e.target.value)}
+                placeholder={
+                  vaAResolver
+                    ? "Explica cómo se solucionó (obligatorio para resolver)"
+                    : "Nota para la bitácora (opcional)"
+                }
+              />
+              <div className="fila-accion">
+                {/* Los botones salen de lo que responde la API, no de una
+                    lista escrita aqui. Si cambia una regla en el backend,
+                    esto se ajusta solo. */}
+                {transiciones.map((estado) => (
+                  <button
+                    key={estado}
+                    onClick={() => moverA(estado)}
+                    disabled={accionEnCurso !== null}
+                  >
+                    {accionEnCurso === estado
+                      ? "Cambiando…"
+                      : `Pasar a ${ETIQUETA_ESTADO[estado]}`}
+                  </button>
+                ))}
+              </div>
+            </>
           )}
         </div>
       </div>
+
+      <Bitacora
+        comentarios={comentarios}
+        personas={personas}
+        bloqueada={cerrado}
+        onAgregar={agregarComentario}
+      />
 
       <dl className="ficha">
         <dt>Reportado por</dt>
