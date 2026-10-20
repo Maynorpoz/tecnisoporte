@@ -312,3 +312,87 @@ button:disabled {
     display: none;
   }
 }
+
+/* Panel de acciones del detalle: asignar tecnico y mover de estado */
+
+.panel-acciones {
+  display: flex;
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.accion {
+  flex: 1;
+  background: var(--superficie);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio);
+  padding: 16px;
+}
+
+.accion h2 {
+  margin: 0 0 10px;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: var(--texto-suave);
+}
+
+.fila-accion {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.fila-accion select {
+  font: inherit;
+  padding: 7px 10px;
+  border: 1px solid var(--borde);
+  border-radius: var(--radio);
+  background: #fafbfc;
+  flex: 1;
+  min-width: 170px;
+}
+
+.fila-accion button {
+  background: var(--acento);
+  border-color: var(--acento);
+  color: #fff;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.fila-accion button:disabled {
+  background: var(--superficie);
+  border-color: var(--borde);
+  color: var(--texto-suave);
+}
+
+.estado-asignado {
+  background: #eae6ff;
+  color: #403294;
+}
+
+.estado-resuelto {
+  background: #e3fcef;
+  color: #006644;
+}
+
+.prioridad-media {
+  background: #deebff;
+  color: #0747a6;
+}
+
+.prioridad-baja {
+  background: #ebecf0;
+  color: #42526e;
+}
+
+@media (max-width: 640px) {
+  .panel-acciones {
+    display: block;
+  }
+  .accion {
+    margin-bottom: 12px;
+  }
+}

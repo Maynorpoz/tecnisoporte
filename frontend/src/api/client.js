@@ -20,6 +20,8 @@ async function pedir(ruta, opciones = {}) {
     const error = new Error(cuerpo?.error || `Error ${respuesta.status}`);
     error.status = respuesta.status;
     error.detalles = cuerpo?.detalles || [];
+    // El 409 de una transicion invalida trae a donde si se puede ir.
+    error.transicionesPosibles = cuerpo?.transiciones_posibles || null;
     throw error;
   }
 
@@ -35,7 +37,21 @@ export const api = {
   crearIncidente: (datos) =>
     pedir("/incidents", { method: "POST", body: JSON.stringify(datos) }),
 
-  listarUsuarios: () => pedir("/users")
+  asignarTecnico: (id, tecnicoId) =>
+    pedir(`/incidents/${id}/asignar`, {
+      method: "PATCH",
+      body: JSON.stringify({ tecnico_id: tecnicoId })
+    }),
+
+  cambiarEstado: (id, estado) =>
+    pedir(`/incidents/${id}/estado`, {
+      method: "PATCH",
+      body: JSON.stringify({ estado })
+    }),
+
+  listarUsuarios: () => pedir("/users"),
+
+  listarTecnicos: () => pedir("/technicians")
 };
 
 export const CATEGORIAS = ["HARDWARE", "SOFTWARE", "RED", "ACCESOS", "OTRO"];
