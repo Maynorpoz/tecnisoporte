@@ -21,7 +21,7 @@ function validarNuevoComentario(body) {
   }
 
   if (!esTextoUtil(body.cuerpo)) {
-    errores.push({ campo: "cuerpo", mensaje: "El comentario no puede ir vacio" });
+    errores.push({ campo: "cuerpo", mensaje: "El comentario no puede ir vacío" });
   } else if (body.cuerpo.trim().length < CUERPO_MIN) {
     errores.push({
       campo: "cuerpo",
@@ -34,8 +34,8 @@ function validarNuevoComentario(body) {
   return { valido: errores.length === 0, errores, datos };
 }
 
-// La nota que acompania un cambio de estado. Es opcional salvo al
-// resolver: ahi es el momento en que el tecnico sabe como lo arreglo, y
+// La nota que acompaña un cambio de estado. Es opcional salvo al
+// resolver: ahi es el momento en que el técnico sabe como lo arreglo, y
 // si no se le pide en ese instante no lo escribe nunca.
 function validarNotaDeEstado(nota, nuevoEstado) {
   const obligatoria = nuevoEstado === "RESUELTO";
@@ -49,7 +49,7 @@ function validarNotaDeEstado(nota, nuevoEstado) {
           {
             campo: "nota",
             mensaje:
-              "Al resolver hay que explicar como se soluciono el incidente"
+              "Al resolver hay que explicar cómo se solucionó el incidente"
           }
         ],
         datos: {}

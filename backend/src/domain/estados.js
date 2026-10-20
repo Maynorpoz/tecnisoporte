@@ -3,11 +3,11 @@ const { ESTADOS } = require("./incidents");
 // El flujo es lineal: un incidente avanza de un estado al siguiente y no
 // se devuelve. No contemplo reabrir un incidente resuelto porque el
 // documento del proyecto describe el flujo en un solo sentido; si se
-// necesitara, habria que agregar RESUELTO -> EN_PROCESO aqui y un motivo
+// necesitara, habría que agregar RESUELTO -> EN_PROCESO aquí y un motivo
 // de reapertura en la base.
 //
 // Tampoco se permite resolver directo desde NUEVO. Se intento en el PR
-// !11 y las pruebas lo detuvieron: ademas de romper el flujo lineal,
+// !11 y las pruebas lo detuvieron: además de romper el flujo lineal,
 // cambiaba el contrato del endpoint de estado, que devuelve la lista de
 // transiciones posibles. Ver el Bug AB#47.
 const TRANSICIONES = {
@@ -30,7 +30,7 @@ function siguientesEstados(desde) {
 }
 
 // Devuelve el resultado en vez de lanzar, para que la ruta decida que
-// codigo HTTP corresponde y el modulo siga siendo probable sin Express.
+// código HTTP corresponde y el modulo siga siendo probable sin Express.
 function puedeTransicionar(desde, hacia) {
   if (!esEstadoValido(desde)) {
     return { permitido: false, motivo: `Estado de origen desconocido: ${desde}` };
@@ -44,7 +44,7 @@ function puedeTransicionar(desde, hacia) {
   }
 
   if (desde === hacia) {
-    return { permitido: false, motivo: `El incidente ya esta en ${hacia}` };
+    return { permitido: false, motivo: `El incidente ya está en ${hacia}` };
   }
 
   if (ESTADOS_FINALES.includes(desde)) {
@@ -66,7 +66,7 @@ function puedeTransicionar(desde, hacia) {
 }
 
 // Marcas de tiempo que acompañan a ciertos estados. La base guarda
-// resuelto_en y cerrado_en, y es aqui donde se decide cuando se llenan.
+// resuelto_en y cerrado_en, y es aquí donde se decide cuando se llenan.
 function columnaDeFecha(estado) {
   if (estado === "RESUELTO") return "resuelto_en";
   if (estado === "CERRADO") return "cerrado_en";

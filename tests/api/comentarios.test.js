@@ -166,7 +166,7 @@ describe("nota obligatoria al resolver", () => {
       .patch(`/api/incidents/${creado.id}/estado`)
       .send({ estado: "RESUELTO" });
 
-    // 409 por el salto invalido, no 400 por falta de nota.
+    // 409 por el salto inválido, no 400 por falta de nota.
     expect(res.status).toBe(409);
   });
 });

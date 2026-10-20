@@ -7,8 +7,8 @@ const RAIZ_DEL_REPO = path.resolve(__dirname, "..", "..", "..");
 
 require("dotenv").config({ path: path.join(RAIZ_DEL_REPO, ".env") });
 
-// Validacion temprana: si falta una variable obligatoria, el proceso falla
-// al arrancar en lugar de romperse a mitad de una peticion.
+// Validación temprana: si falta una variable obligatoria, el proceso falla
+// al arrancar en lugar de romperse a mitad de una petición.
 const requeridas = ["DATABASE_URL"];
 const faltantes = requeridas.filter((nombre) => !process.env[nombre]);
 

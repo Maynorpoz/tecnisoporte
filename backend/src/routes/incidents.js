@@ -15,7 +15,7 @@ const {
 
 const router = express.Router();
 
-// Codigo de Postgres para violacion de llave foranea. Lo usamos para
+// Código de Postgres para violacion de llave foranea. Lo usamos para
 // distinguir "mandaste un usuario_id que no existe" de un error real.
 const FK_VIOLATION = "23503";
 
@@ -23,7 +23,7 @@ router.post("/incidents", async (req, res) => {
   const { valido, errores, datos } = validarNuevoIncidente(req.body || {});
 
   if (!valido) {
-    return res.status(400).json({ error: "Datos invalidos", detalles: errores });
+    return res.status(400).json({ error: "Datos inválidos", detalles: errores });
   }
 
   try {
@@ -32,7 +32,7 @@ router.post("/incidents", async (req, res) => {
   } catch (error) {
     if (error.code === FK_VIOLATION) {
       return res.status(400).json({
-        error: "Datos invalidos",
+        error: "Datos inválidos",
         detalles: [{ campo: "usuario_id", mensaje: "El usuario no existe" }]
       });
     }
@@ -46,7 +46,7 @@ router.get("/incidents", async (req, res) => {
   const { valido, errores, datos } = validarPaginacion(req.query || {});
 
   if (!valido) {
-    return res.status(400).json({ error: "Parametros invalidos", detalles: errores });
+    return res.status(400).json({ error: "Parámetros inválidos", detalles: errores });
   }
 
   try {
@@ -63,7 +63,7 @@ router.get("/incidents/:id", async (req, res) => {
 
   if (id === null) {
     return res.status(400).json({
-      error: "Parametros invalidos",
+      error: "Parámetros inválidos",
       detalles: [{ campo: "id", mensaje: "El id debe ser un entero positivo" }]
     });
   }
@@ -76,8 +76,8 @@ router.get("/incidents/:id", async (req, res) => {
     }
 
     // Se incluye a donde puede moverse el incidente para que el frontend
-    // no tenga que repetir la maquina de estados. Si manana cambia una
-    // regla aqui, la interfaz se ajusta sola.
+    // no tenga que repetir la máquina de estados. Si mañana cambia una
+    // regla aquí, la interfaz se ajusta sola.
     return res.json({
       ...incidente,
       transiciones_posibles: siguientesEstados(incidente.estado)
@@ -94,14 +94,14 @@ router.patch("/incidents/:id/asignar", async (req, res) => {
 
   if (id === null) {
     return res.status(400).json({
-      error: "Parametros invalidos",
+      error: "Parámetros inválidos",
       detalles: [{ campo: "id", mensaje: "El id debe ser un entero positivo" }]
     });
   }
 
   if (tecnicoId === null) {
     return res.status(400).json({
-      error: "Datos invalidos",
+      error: "Datos inválidos",
       detalles: [
         { campo: "tecnico_id", mensaje: "El tecnico_id debe ser un entero positivo" }
       ]
@@ -117,15 +117,15 @@ router.patch("/incidents/:id/asignar", async (req, res) => {
 
     if (incidente.estado === "CERRADO") {
       return res.status(409).json({
-        error: "No se puede asignar un tecnico a un incidente CERRADO"
+        error: "No se puede asignar un técnico a un incidente CERRADO"
       });
     }
 
     if (!(await tecnicos.existe(tecnicoId))) {
       return res.status(400).json({
-        error: "Datos invalidos",
+        error: "Datos inválidos",
         detalles: [
-          { campo: "tecnico_id", mensaje: "El tecnico no existe o esta inactivo" }
+          { campo: "tecnico_id", mensaje: "El técnico no existe o está inactivo" }
         ]
       });
     }
@@ -133,7 +133,7 @@ router.patch("/incidents/:id/asignar", async (req, res) => {
     return res.json(await incidentes.asignarTecnico(id, tecnicoId));
   } catch (error) {
     console.error("Error al asignar tecnico:", error);
-    return res.status(500).json({ error: "No se pudo asignar el tecnico" });
+    return res.status(500).json({ error: "No se pudo asignar el técnico" });
   }
 });
 
@@ -143,7 +143,7 @@ router.patch("/incidents/:id/estado", async (req, res) => {
 
   if (id === null) {
     return res.status(400).json({
-      error: "Parametros invalidos",
+      error: "Parámetros inválidos",
       detalles: [{ campo: "id", mensaje: "El id debe ser un entero positivo" }]
     });
   }
@@ -167,15 +167,15 @@ router.patch("/incidents/:id/estado", async (req, res) => {
       });
     }
 
-    // La nota es opcional salvo al resolver. Se valida despues de la
-    // transicion para no exigir una explicacion por un cambio que de
+    // La nota es opcional salvo al resolver. Se valida después de la
+    // transición para no exigir una explicacion por un cambio que de
     // todas formas se va a rechazar.
     const revision = validarNotaDeEstado((req.body || {}).nota, nuevoEstado);
 
     if (!revision.valido) {
       return res
         .status(400)
-        .json({ error: "Datos invalidos", detalles: revision.errores });
+        .json({ error: "Datos inválidos", detalles: revision.errores });
     }
 
     const actualizado = await incidentes.cambiarEstado(
@@ -184,8 +184,8 @@ router.patch("/incidents/:id/estado", async (req, res) => {
       columnaDeFecha(nuevoEstado),
       revision.datos.nota
         ? {
-            // El autor es el tecnico asignado. Llegar mas alla de NUEVO
-            // exige tener uno, asi que siempre hay nombre.
+            // El autor es el técnico asignado. Llegar mas alla de NUEVO
+            // exige tener uno, así que siempre hay nombre.
             autor: incidente.tecnico_nombre,
             cuerpo: revision.datos.nota
           }

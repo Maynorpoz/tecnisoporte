@@ -1,7 +1,7 @@
 const { pool } = require("./pool");
 
-// El estado inicial lo pone la base con su DEFAULT, y el tecnico queda
-// nulo a proposito: asignar es otra operacion, no parte de crear.
+// El estado inicial lo pone la base con su DEFAULT, y el técnico queda
+// nulo a proposito: asignar es otra operación, no parte de crear.
 const SQL_CREAR = `
   INSERT INTO incidents (titulo, descripcion, categoria, prioridad, usuario_id)
   VALUES ($1, $2, $3, $4, $5)
@@ -10,7 +10,7 @@ const SQL_CREAR = `
 `;
 
 // Los nombres vienen con JOIN para que el frontend no tenga que pedir
-// cada usuario y cada tecnico por aparte. El de tecnico es LEFT porque
+// cada usuario y cada técnico por aparte. El de técnico es LEFT porque
 // un incidente en NUEVO todavia no tiene a nadie asignado.
 const SELECT_BASE = `
   SELECT i.id, i.titulo, i.descripcion, i.categoria, i.prioridad, i.estado,
@@ -46,7 +46,7 @@ async function crear({ titulo, descripcion, categoria, prioridad, usuario_id }) 
 async function listar({ page, pageSize }) {
   const offset = (page - 1) * pageSize;
 
-  // Dos consultas: una para la pagina y otra para el total. Se podria
+  // Dos consultas: una para la pagina y otra para el total. Se podría
   // resolver con count(*) over(), pero entonces una pagina vacia no
   // devuelve el total y hay que tratarlo aparte igual.
   const [pagina, conteo] = await Promise.all([
@@ -72,7 +72,7 @@ async function obtenerPorId(id) {
 
 // Asignar implica mover el incidente a ASIGNADO cuando venia de NUEVO.
 // La restriccion de la base exige que todo lo que pase de NUEVO tenga
-// tecnico, asi que las dos cosas van en la misma sentencia y no pueden
+// técnico, así que las dos cosas van en la misma sentencia y no pueden
 // quedar a medias.
 const SQL_ASIGNAR = `
   UPDATE incidents
@@ -87,9 +87,9 @@ async function asignarTecnico(id, tecnicoId) {
   return rowCount > 0 ? obtenerPorId(id) : null;
 }
 
-// La columna de fecha se arma aqui y no viene del cliente. El dominio
-// decide cual toca segun el estado, y solo puede devolver resuelto_en,
-// cerrado_en o nada, asi que no hay forma de inyectar un nombre
+// La columna de fecha se arma aquí y no viene del cliente. El dominio
+// decide cual toca según el estado, y solo puede devolver resuelto_en,
+// cerrado_en o nada, así que no hay forma de inyectar un nombre
 // arbitrario en el SQL.
 // Si viene nota, el cambio de estado y el comentario van en la misma
 // transaccion. Separados, un fallo entre los dos dejaria un incidente

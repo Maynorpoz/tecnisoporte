@@ -6,7 +6,7 @@ const { pool } = require("../../backend/src/db/pool");
 const RAIZ = path.resolve(__dirname, "..", "..");
 
 // Crea la base de pruebas si no existe y le aplica el mismo esquema que
-// usa la aplicacion. Se llama una vez por suite que necesite base.
+// usa la aplicación. Se llama una vez por suite que necesite base.
 //
 // Esto vivia en el globalSetup de Jest, pero ese archivo se carga fuera
 // del resolver de Jest y no encontraba los modulos de backend/, porque
@@ -16,7 +16,7 @@ async function prepararBase() {
   const nombreBase = new URL(url).pathname.slice(1);
 
   // CREATE DATABASE no se puede ejecutar desde la base que se va a crear,
-  // asi que se usa postgres, que siempre existe.
+  // así que se usa postgres, que siempre existe.
   const urlAdmin = new URL(url);
   urlAdmin.pathname = "/postgres";
 
@@ -29,8 +29,8 @@ async function prepararBase() {
   );
 
   if (rowCount === 0) {
-    // El nombre no puede ir parametrizado aqui, pero sale del .env y no
-    // de una peticion, asi que no hay entrada externa.
+    // El nombre no puede ir parametrizado aquí, pero sale del .env y no
+    // de una petición, así que no hay entrada externa.
     await admin.query(`CREATE DATABASE "${nombreBase}"`);
   }
 
@@ -44,7 +44,7 @@ async function prepararBase() {
   );
 }
 
-// Las pruebas limpian antes de correr, no despues. Si una falla, los
+// Las pruebas limpian antes de correr, no después. Si una falla, los
 // datos quedan ahi para poder revisarlos.
 async function limpiar() {
   await pool.query(

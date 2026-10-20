@@ -138,8 +138,8 @@ describe("GET /api/incidents/:id", () => {
     expect(res.body.titulo).toBe("Incidente para el detalle");
   });
 
-  // El frontend dibuja los botones de cambio de estado con esto, asi que
-  // no tiene que repetir la maquina de estados.
+  // El frontend dibuja los botones de cambio de estado con esto, así que
+  // no tiene que repetir la máquina de estados.
   it("incluye las transiciones posibles desde el estado actual", async () => {
     const creado = await crearIncidente();
 
