@@ -1,7 +1,7 @@
 const BASE = import.meta.env.VITE_API_URL || "http://localhost:3100/api";
 
 // Envuelve fetch para que todo el manejo de errores de la API quede en un
-// solo lugar. Si la respuesta trae detalles de validacion, los deja
+// solo lugar. Si la respuesta trae detalles de validación, los deja
 // accesibles en error.detalles para que el formulario los pinte por campo.
 async function pedir(ruta, opciones = {}) {
   const respuesta = await fetch(`${BASE}${ruta}`, {
@@ -20,7 +20,7 @@ async function pedir(ruta, opciones = {}) {
     const error = new Error(cuerpo?.error || `Error ${respuesta.status}`);
     error.status = respuesta.status;
     error.detalles = cuerpo?.detalles || [];
-    // El 409 de una transicion invalida trae a donde si se puede ir.
+    // El 409 de una transición inválida trae a donde si se puede ir.
     error.transicionesPosibles = cuerpo?.transiciones_posibles || null;
     throw error;
   }
@@ -44,7 +44,7 @@ export const api = {
     }),
 
   // La nota es opcional salvo al resolver, pero esa regla la aplica el
-  // backend. Aqui solo se manda lo que el usuario haya escrito.
+  // backend. Aquí solo se manda lo que el usuario haya escrito.
   cambiarEstado: (id, estado, nota) =>
     pedir(`/incidents/${id}/estado`, {
       method: "PATCH",

@@ -6,7 +6,7 @@ const {
 } = require("../../backend/src/domain/estados");
 
 // Estas pruebas no tocan la base ni levantan el servidor. El modulo de
-// estados es logica pura y por eso se puede probar asi de directo.
+// estados es lógica pura y por eso se puede probar así de directo.
 
 describe("transiciones validas", () => {
   const camino = [
@@ -35,7 +35,7 @@ describe("transiciones invalidas", () => {
   it("no permite quedarse en el mismo estado", () => {
     const { permitido, motivo } = puedeTransicionar("ASIGNADO", "ASIGNADO");
     expect(permitido).toBe(false);
-    expect(motivo).toContain("ya esta");
+    expect(motivo).toContain("ya está");
   });
 
   it("rechaza un estado que no existe", () => {

@@ -2,7 +2,7 @@ const path = require("path");
 
 // Esto corre antes de que las pruebas carguen cualquier modulo de la app.
 // Es importante el orden: el pool del backend lee DATABASE_URL al ser
-// importado, asi que si no la cambiamos aqui, las pruebas borrarian la
+// importado, así que si no la cambiamos aquí, las pruebas borrarian la
 // base de desarrollo.
 require("dotenv").config({ path: path.resolve(__dirname, "..", "..", ".env") });
 

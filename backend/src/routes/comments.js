@@ -11,7 +11,7 @@ router.get("/incidents/:id/comments", async (req, res) => {
 
   if (id === null) {
     return res.status(400).json({
-      error: "Parametros invalidos",
+      error: "Parámetros inválidos",
       detalles: [{ campo: "id", mensaje: "El id debe ser un entero positivo" }]
     });
   }
@@ -19,7 +19,7 @@ router.get("/incidents/:id/comments", async (req, res) => {
   try {
     // Se comprueba que el incidente exista para poder distinguir
     // "no hay comentarios" de "ese incidente no existe". Sin esto, pedir
-    // los comentarios de un incidente inventado devolveria una lista
+    // los comentarios de un incidente inventado devolvería una lista
     // vacia como si fuera normal.
     if (!(await incidentes.obtenerPorId(id))) {
       return res.status(404).json({ error: "Incidente no encontrado" });
@@ -37,7 +37,7 @@ router.post("/incidents/:id/comments", async (req, res) => {
 
   if (id === null) {
     return res.status(400).json({
-      error: "Parametros invalidos",
+      error: "Parámetros inválidos",
       detalles: [{ campo: "id", mensaje: "El id debe ser un entero positivo" }]
     });
   }
@@ -45,7 +45,7 @@ router.post("/incidents/:id/comments", async (req, res) => {
   const { valido, errores, datos } = validarNuevoComentario(req.body || {});
 
   if (!valido) {
-    return res.status(400).json({ error: "Datos invalidos", detalles: errores });
+    return res.status(400).json({ error: "Datos inválidos", detalles: errores });
   }
 
   try {
@@ -55,7 +55,7 @@ router.post("/incidents/:id/comments", async (req, res) => {
       return res.status(404).json({ error: "Incidente no encontrado" });
     }
 
-    // Un incidente cerrado es un registro historico: se puede leer, pero
+    // Un incidente cerrado es un registro histórico: se puede leer, pero
     // ya no se le agregan notas.
     if (incidente.estado === "CERRADO") {
       return res.status(409).json({

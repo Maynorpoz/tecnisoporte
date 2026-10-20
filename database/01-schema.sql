@@ -18,7 +18,7 @@ CREATE TYPE categoria_incidente AS ENUM (
 
 -- Tablas ----------------------------------------------------------------
 
--- Quien reporta el incidente. No hay login, asi que el usuario se
+-- Quien reporta el incidente. No hay login, así que el usuario se
 -- selecciona al crear el incidente.
 CREATE TABLE users (
     id          SERIAL PRIMARY KEY,
@@ -51,7 +51,7 @@ CREATE TABLE incidents (
     resuelto_en   TIMESTAMPTZ,
     cerrado_en    TIMESTAMPTZ,
 
-    -- Un incidente sin tecnico no puede estar mas alla de NUEVO.
+    -- Un incidente sin técnico no puede estar mas alla de NUEVO.
     CONSTRAINT asignado_requiere_tecnico CHECK (
         estado = 'NUEVO' OR tecnico_id IS NOT NULL
     )

@@ -1,6 +1,6 @@
 // Valores que acepta el dominio. Tienen que coincidir con los tipos
-// enumerados de database/01-schema.sql: si se agrega uno aqui, hay que
-// agregarlo alla tambien con un ALTER TYPE.
+// enumerados de database/01-schema.sql: si se agrega uno aquí, hay que
+// agregarlo alla también con un ALTER TYPE.
 
 const CATEGORIAS = ["HARDWARE", "SOFTWARE", "RED", "ACCESOS", "OTRO"];
 const PRIORIDADES = ["BAJA", "MEDIA", "ALTA", "CRITICA"];

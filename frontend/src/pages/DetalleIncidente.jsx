@@ -9,7 +9,7 @@ function fecha(valor) {
 }
 
 // Las etiquetas que ve el usuario. En la API los estados van en mayuscula
-// y con guion bajo porque asi estan en el enum de la base.
+// y con guion bajo porque así estan en el enum de la base.
 const ETIQUETA_ESTADO = {
   NUEVO: "Nuevo",
   ASIGNADO: "Asignado",
@@ -31,7 +31,7 @@ export default function DetalleIncidente() {
   const [errorAccion, setErrorAccion] = useState(null);
 
   // Tras cualquier accion hay que releer las dos cosas: el incidente
-  // cambio de estado y la bitacora pudo ganar una entrada automatica.
+  // cambio de estado y la bitacora pudo ganar una entrada automática.
   const recargar = useCallback(async () => {
     const [datos, lista] = await Promise.all([
       api.obtenerIncidente(id),
@@ -121,8 +121,8 @@ export default function DetalleIncidente() {
 
   const cerrado = incidente.estado === "CERRADO";
   const transiciones = incidente.transiciones_posibles || [];
-  // Quien exige la nota es el backend. Aqui solo se avisa de antemano
-  // para no dejar que la persona escriba y se lleve el rechazo despues.
+  // Quien exige la nota es el backend. Aquí solo se avisa de antemano
+  // para no dejar que la persona escriba y se lleve el rechazo después.
   const vaAResolver = transiciones.includes("RESUELTO");
 
   return (

@@ -13,20 +13,20 @@ function esTextoUtil(valor) {
 }
 
 // Valida el cuerpo de un POST /incidents. No toca la base: recibe el
-// body y devuelve los errores y los datos ya limpios, asi se puede
+// body y devuelve los errores y los datos ya limpios, así se puede
 // probar sin levantar nada.
 function validarNuevoIncidente(body) {
   const errores = [];
   const datos = {};
 
   if (!esTextoUtil(body.titulo)) {
-    errores.push({ campo: "titulo", mensaje: "El titulo es obligatorio" });
+    errores.push({ campo: "titulo", mensaje: "El título es obligatorio" });
   } else {
     const titulo = body.titulo.trim();
     if (titulo.length < TITULO_MIN || titulo.length > TITULO_MAX) {
       errores.push({
         campo: "titulo",
-        mensaje: `El titulo debe tener entre ${TITULO_MIN} y ${TITULO_MAX} caracteres`
+        mensaje: `El título debe tener entre ${TITULO_MIN} y ${TITULO_MAX} caracteres`
       });
     } else {
       datos.titulo = titulo;
@@ -34,13 +34,13 @@ function validarNuevoIncidente(body) {
   }
 
   if (!esTextoUtil(body.descripcion)) {
-    errores.push({ campo: "descripcion", mensaje: "La descripcion es obligatoria" });
+    errores.push({ campo: "descripcion", mensaje: "La descripción es obligatoria" });
   } else {
     const descripcion = body.descripcion.trim();
     if (descripcion.length < DESCRIPCION_MIN) {
       errores.push({
         campo: "descripcion",
-        mensaje: `La descripcion debe tener al menos ${DESCRIPCION_MIN} caracteres`
+        mensaje: `La descripción debe tener al menos ${DESCRIPCION_MIN} caracteres`
       });
     } else {
       datos.descripcion = descripcion;
@@ -50,7 +50,7 @@ function validarNuevoIncidente(body) {
   if (!CATEGORIAS.includes(body.categoria)) {
     errores.push({
       campo: "categoria",
-      mensaje: `La categoria debe ser una de: ${CATEGORIAS.join(", ")}`
+      mensaje: `La categoría debe ser una de: ${CATEGORIAS.join(", ")}`
     });
   } else {
     datos.categoria = body.categoria;
@@ -83,8 +83,8 @@ function validarNuevoIncidente(body) {
 const PAGE_SIZE_POR_DEFECTO = 20;
 const PAGE_SIZE_MAX = 100;
 
-// Los query params siempre llegan como texto, asi que hay que convertir
-// antes de comparar. Un valor ausente toma el default; uno invalido es
+// Los query params siempre llegan como texto, así que hay que convertir
+// antes de comparar. Un valor ausente toma el default; uno inválido es
 // error, porque ?page=abc casi siempre es un bug del cliente y es peor
 // devolverle la pagina 1 en silencio.
 function aEnteroPositivo(valor) {

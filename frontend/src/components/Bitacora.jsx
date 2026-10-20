@@ -5,7 +5,7 @@ function cuando(valor) {
 }
 
 // El historial del incidente y el formulario para agregarle entradas.
-// Recibe la lista ya cargada para que el detalle sea el unico que habla
+// Recibe la lista ya cargada para que el detalle sea el único que habla
 // con la API y no haya dos componentes pidiendo lo mismo.
 export default function Bitacora({
   comentarios,

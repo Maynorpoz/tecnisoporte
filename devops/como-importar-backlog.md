@@ -55,7 +55,7 @@ Si trabajas en GitHub, instala la app **Azure Boards** en el repositorio para qu
 |-----------------------------------------|-------------------------------|---------------------------------------|
 | Epics / Features / Stories / Tasks      | 2 / 4 / 8 / 16                | este CSV (2 / 6 / 15 / 35)            |
 | PRs reales con descripción y revisión   | 6 o más                       | una rama por Task relevante           |
-| Deudas identificadas / resueltas        | 5 / 2                         | Feature "Seguridad deuda tecnica..."  |
+| Deudas identificadas / resueltas        | 5 / 2                         | Feature "Seguridad deuda técnica..."  |
 | Pipeline fallido y luego exitoso        | 1                             | Task de fallo controlado + Bug        |
 | Self-hosted agent                       | 1                             | Task del pool propio                  |
 | Workflow de GitHub Actions              | 1                             | Task de GitHub Actions                |
