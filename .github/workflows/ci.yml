@@ -1,0 +1,94 @@
+# Workflow complementario de GitHub Actions.
+#
+# El pipeline principal es el de Azure, que corre en el agente
+# autohospedado y produce el artefacto. Este corre en los runners de
+# GitHub y valida lo mismo en un entorno limpio de Linux: si algo pasa
+# aqui pero falla alla (o al reves), el problema es de la maquina y no
+# del codigo.
+#
+# Diferencia con el de Azure: alla levantamos Postgres con docker
+# compose, aqui se usa services, que es la forma nativa de Actions.
+
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  verificar:
+    name: Lint, pruebas y dependencias
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: tecnisoporte_test
+          POSTGRES_USER: incident_user
+          POSTGRES_PASSWORD: ${{ secrets.CI_DB_PASSWORD }}
+        ports:
+          - 5436:5432
+        # Sin el healthcheck, los pasos arrancan antes de que Postgres
+        # acepte conexiones y las pruebas fallan sin motivo aparente.
+        options: >-
+          --health-cmd "pg_isready -U incident_user -d tecnisoporte_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    steps:
+      - name: Traer el codigo
+        uses: actions/checkout@v4
+
+      - name: Preparar Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      # ---------- Backend ----------
+
+      - name: Instalar dependencias del backend
+        working-directory: backend
+        run: npm ci
+
+      - name: Lint del backend
+        working-directory: backend
+        run: npm run lint
+
+      - name: Correr las pruebas
+        working-directory: backend
+        run: npm test
+        env:
+          TEST_DATABASE_URL: postgresql://incident_user:${{ secrets.CI_DB_PASSWORD }}@localhost:5436/tecnisoporte_test
+
+      - name: Publicar resultados de las pruebas
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: resultados-pruebas
+          path: test-results/junit.xml
+          if-no-files-found: warn
+
+      # Mismo criterio que el pipeline de Azure: solo detiene por
+      # vulnerabilidades criticas. Las demas se documentan y se deciden
+      # en docs/dependencias.md.
+      - name: Revisar dependencias del backend
+        working-directory: backend
+        run: npm audit --audit-level=critical
+
+      # ---------- Frontend ----------
+
+      - name: Instalar dependencias del frontend
+        working-directory: frontend
+        run: npm ci
+
+      - name: Compilar el frontend
+        working-directory: frontend
+        run: npm run build
+
+      - name: Revisar dependencias del frontend
+        working-directory: frontend
+        run: npm audit --audit-level=critical
