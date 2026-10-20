@@ -91,17 +91,47 @@ async function asignarTecnico(id, tecnicoId) {
 // decide cual toca segun el estado, y solo puede devolver resuelto_en,
 // cerrado_en o nada, asi que no hay forma de inyectar un nombre
 // arbitrario en el SQL.
-async function cambiarEstado(id, nuevoEstado, columnaFecha) {
-  const sql = `
-    UPDATE incidents
-    SET estado = $2::estado_incidente
-        ${columnaFecha ? `, ${columnaFecha} = now()` : ""}
-    WHERE id = $1
-    RETURNING id
-  `;
+// Si viene nota, el cambio de estado y el comentario van en la misma
+// transaccion. Separados, un fallo entre los dos dejaria un incidente
+// RESUELTO sin la explicacion que lo justifica, que es justo lo que la
+// nota obligatoria pretende evitar.
+async function cambiarEstado(id, nuevoEstado, columnaFecha, nota = null) {
+  const cliente = await pool.connect();
 
-  const { rowCount } = await pool.query(sql, [id, nuevoEstado]);
-  return rowCount > 0 ? obtenerPorId(id) : null;
+  try {
+    await cliente.query("BEGIN");
+
+    const sql = `
+      UPDATE incidents
+      SET estado = $2::estado_incidente
+          ${columnaFecha ? `, ${columnaFecha} = now()` : ""}
+      WHERE id = $1
+      RETURNING id
+    `;
+
+    const { rowCount } = await cliente.query(sql, [id, nuevoEstado]);
+
+    if (rowCount === 0) {
+      await cliente.query("ROLLBACK");
+      return null;
+    }
+
+    if (nota) {
+      await cliente.query(
+        "INSERT INTO comments (incidente_id, autor, cuerpo) VALUES ($1, $2, $3)",
+        [id, nota.autor, nota.cuerpo]
+      );
+    }
+
+    await cliente.query("COMMIT");
+  } catch (error) {
+    await cliente.query("ROLLBACK");
+    throw error;
+  } finally {
+    cliente.release();
+  }
+
+  return obtenerPorId(id);
 }
 
 module.exports = { crear, listar, obtenerPorId, asignarTecnico, cambiarEstado };

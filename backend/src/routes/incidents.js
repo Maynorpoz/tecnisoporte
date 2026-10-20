@@ -4,6 +4,7 @@ const {
   validarPaginacion,
   validarId
 } = require("../validation/incidents");
+const { validarNotaDeEstado } = require("../validation/comments");
 const incidentes = require("../db/incidents");
 const tecnicos = require("../db/technicians");
 const {
@@ -166,10 +167,29 @@ router.patch("/incidents/:id/estado", async (req, res) => {
       });
     }
 
+    // La nota es opcional salvo al resolver. Se valida despues de la
+    // transicion para no exigir una explicacion por un cambio que de
+    // todas formas se va a rechazar.
+    const revision = validarNotaDeEstado((req.body || {}).nota, nuevoEstado);
+
+    if (!revision.valido) {
+      return res
+        .status(400)
+        .json({ error: "Datos invalidos", detalles: revision.errores });
+    }
+
     const actualizado = await incidentes.cambiarEstado(
       id,
       nuevoEstado,
-      columnaDeFecha(nuevoEstado)
+      columnaDeFecha(nuevoEstado),
+      revision.datos.nota
+        ? {
+            // El autor es el tecnico asignado. Llegar mas alla de NUEVO
+            // exige tener uno, asi que siempre hay nombre.
+            autor: incidente.tecnico_nombre,
+            cuerpo: revision.datos.nota
+          }
+        : null
     );
 
     return res.json(actualizado);
