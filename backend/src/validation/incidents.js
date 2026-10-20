@@ -1,6 +1,7 @@
 const {
   CATEGORIAS,
   PRIORIDADES,
+  ESTADOS,
   PRIORIDAD_POR_DEFECTO
 } = require("../domain/incidents");
 
@@ -123,6 +124,55 @@ function validarPaginacion(query) {
   return { valido: errores.length === 0, errores, datos };
 }
 
+// Filtros del listado. Son opcionales y combinables; cada uno se valida
+// contra las listas del dominio para que un valor inventado se rechace
+// aqui y no llegue a la base como error de tipo.
+function validarFiltros(query) {
+  const errores = [];
+  const datos = {};
+
+  const porLista = {
+    estado: ESTADOS,
+    prioridad: PRIORIDADES,
+    categoria: CATEGORIAS
+  };
+
+  for (const [campo, permitidos] of Object.entries(porLista)) {
+    const valor = query[campo];
+    if (valor === undefined || valor === "") continue;
+
+    if (!permitidos.includes(valor)) {
+      errores.push({
+        campo,
+        mensaje: `${campo} debe ser uno de: ${permitidos.join(", ")}`
+      });
+    } else {
+      datos[campo] = valor;
+    }
+  }
+
+  // El tecnico se puede filtrar por id, o pedir los que no tienen
+  // ninguno asignado con tecnico_id=ninguno.
+  const tecnico = query.tecnico_id;
+  if (tecnico !== undefined && tecnico !== "") {
+    if (tecnico === "ninguno") {
+      datos.sin_tecnico = true;
+    } else {
+      const id = aEnteroPositivo(tecnico);
+      if (id === null || id === undefined) {
+        errores.push({
+          campo: "tecnico_id",
+          mensaje: "tecnico_id debe ser un entero positivo o la palabra ninguno"
+        });
+      } else {
+        datos.tecnico_id = id;
+      }
+    }
+  }
+
+  return { valido: errores.length === 0, errores, datos };
+}
+
 function validarId(valor) {
   const id = aEnteroPositivo(valor);
   return id === null || id === undefined ? null : id;
@@ -131,6 +181,7 @@ function validarId(valor) {
 module.exports = {
   validarNuevoIncidente,
   validarPaginacion,
+  validarFiltros,
   validarId,
   TITULO_MIN,
   TITULO_MAX,

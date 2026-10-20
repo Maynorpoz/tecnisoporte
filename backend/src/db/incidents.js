@@ -22,15 +22,44 @@ const SELECT_BASE = `
   LEFT JOIN technicians t ON t.id = i.tecnico_id
 `;
 
-const SQL_LISTAR = `
-  ${SELECT_BASE}
-  ORDER BY i.creado_en DESC, i.id DESC
-  LIMIT $1 OFFSET $2
-`;
-
-const SQL_CONTAR = "SELECT count(*)::int AS total FROM incidents";
-
 const SQL_POR_ID = `${SELECT_BASE} WHERE i.id = $1`;
+
+// Arma el WHERE a partir de los filtros que hayan venido. Los nombres de
+// columna son fijos y estan escritos aqui; del cliente solo salen los
+// valores, y esos van parametrizados.
+//
+// Devuelve tambien los valores para que la consulta de la pagina y la
+// del total usen exactamente las mismas condiciones. Mantenerlas
+// separadas era el error que esto viene a evitar: el total contaba la
+// tabla entera y el totalPages quedaba mal en cuanto habia un filtro.
+function construirWhere(filtros = {}) {
+  const condiciones = [];
+  const valores = [];
+
+  const columnas = {
+    estado: "i.estado = $%::estado_incidente",
+    prioridad: "i.prioridad = $%::prioridad_incidente",
+    categoria: "i.categoria = $%::categoria_incidente",
+    tecnico_id: "i.tecnico_id = $%"
+  };
+
+  for (const [campo, plantilla] of Object.entries(columnas)) {
+    if (filtros[campo] !== undefined && filtros[campo] !== null) {
+      valores.push(filtros[campo]);
+      condiciones.push(plantilla.replace("%", valores.length));
+    }
+  }
+
+  // Caso aparte: pedir los que no tienen tecnico asignado.
+  if (filtros.sin_tecnico) {
+    condiciones.push("i.tecnico_id IS NULL");
+  }
+
+  return {
+    where: condiciones.length ? `WHERE ${condiciones.join(" AND ")}` : "",
+    valores
+  };
+}
 
 async function crear({ titulo, descripcion, categoria, prioridad, usuario_id }) {
   const { rows } = await pool.query(SQL_CREAR, [
@@ -43,15 +72,27 @@ async function crear({ titulo, descripcion, categoria, prioridad, usuario_id }) 
   return rows[0];
 }
 
-async function listar({ page, pageSize }) {
+async function listar({ page, pageSize, filtros = {} }) {
   const offset = (page - 1) * pageSize;
+  const { where, valores } = construirWhere(filtros);
+
+  const sqlPagina = `
+    ${SELECT_BASE}
+    ${where}
+    ORDER BY i.creado_en DESC, i.id DESC
+    LIMIT $${valores.length + 1} OFFSET $${valores.length + 2}
+  `;
+
+  // El conteo usa el mismo WHERE. Si contara la tabla entera, el
+  // totalPages saldria mal apenas hubiera un filtro activo.
+  const sqlTotal = `SELECT count(*)::int AS total FROM incidents i ${where}`;
 
   // Dos consultas: una para la pagina y otra para el total. Se podría
   // resolver con count(*) over(), pero entonces una pagina vacia no
   // devuelve el total y hay que tratarlo aparte igual.
   const [pagina, conteo] = await Promise.all([
-    pool.query(SQL_LISTAR, [pageSize, offset]),
-    pool.query(SQL_CONTAR)
+    pool.query(sqlPagina, [...valores, pageSize, offset]),
+    pool.query(sqlTotal, valores)
   ]);
 
   const total = conteo.rows[0].total;

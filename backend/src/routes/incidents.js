@@ -2,6 +2,7 @@ const express = require("express");
 const {
   validarNuevoIncidente,
   validarPaginacion,
+  validarFiltros,
   validarId
 } = require("../validation/incidents");
 const { validarNotaDeEstado } = require("../validation/comments");
@@ -43,14 +44,22 @@ router.post("/incidents", async (req, res) => {
 });
 
 router.get("/incidents", async (req, res) => {
-  const { valido, errores, datos } = validarPaginacion(req.query || {});
+  const paginacion = validarPaginacion(req.query || {});
+  const filtros = validarFiltros(req.query || {});
 
-  if (!valido) {
+  // Se juntan los errores de los dos para que una petición con varios
+  // parámetros malos los reporte todos de una vez y no de uno en uno.
+  const errores = [...paginacion.errores, ...filtros.errores];
+
+  if (errores.length > 0) {
     return res.status(400).json({ error: "Parámetros inválidos", detalles: errores });
   }
 
   try {
-    const resultado = await incidentes.listar(datos);
+    const resultado = await incidentes.listar({
+      ...paginacion.datos,
+      filtros: filtros.datos
+    });
     return res.json(resultado);
   } catch (error) {
     console.error("Error al listar incidentes:", error);
