@@ -396,3 +396,101 @@ button:disabled {
     margin-bottom: 12px;
   }
 }
+
+/* Bitacora del incidente */
+
+.accion textarea {
+  font: inherit;
+  width: 100%;
+  padding: 8px 10px;
+  margin-bottom: 8px;
+  border: 1px solid var(--borde);
+  border-radius: var(--radio);
+  background: #fafbfc;
+  resize: vertical;
+}
+
+.bitacora {
+  background: var(--superficie);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio);
+  padding: 16px;
+  margin-top: 16px;
+}
+
+.bitacora h2 {
+  margin: 0 0 12px;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: var(--texto-suave);
+}
+
+.entradas {
+  list-style: none;
+  margin: 0 0 16px;
+  padding: 0;
+  /* La linea vertical hace que se lea como una conversacion en orden
+     y no como una lista suelta de notas. */
+  border-left: 2px solid var(--borde);
+  padding-left: 14px;
+}
+
+.entradas li {
+  position: relative;
+  padding-bottom: 14px;
+}
+
+.entradas li:last-child {
+  padding-bottom: 0;
+}
+
+.entradas li::before {
+  content: "";
+  position: absolute;
+  left: -20px;
+  top: 5px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--acento);
+}
+
+.entrada-cabecera {
+  display: flex;
+  gap: 10px;
+  align-items: baseline;
+  flex-wrap: wrap;
+}
+
+.entrada-fecha {
+  color: var(--texto-suave);
+  font-size: 12px;
+}
+
+.entradas p {
+  margin: 3px 0 0;
+  white-space: pre-wrap;
+}
+
+.form-bitacora {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  border-top: 1px solid var(--borde);
+  padding-top: 14px;
+}
+
+.form-bitacora select,
+.form-bitacora textarea {
+  font: inherit;
+  padding: 8px 10px;
+  border: 1px solid var(--borde);
+  border-radius: var(--radio);
+  background: #fafbfc;
+  resize: vertical;
+}
+
+.form-bitacora select {
+  max-width: 260px;
+}
