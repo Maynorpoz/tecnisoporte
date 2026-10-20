@@ -155,7 +155,9 @@ describe("GET /api/incidents/:id", () => {
 
     await request(app).patch(`${url}/asignar`).send({ tecnico_id: 1 });
     await request(app).patch(`${url}/estado`).send({ estado: "EN_PROCESO" });
-    await request(app).patch(`${url}/estado`).send({ estado: "RESUELTO" });
+    await request(app)
+      .patch(`${url}/estado`)
+      .send({ estado: "RESUELTO", nota: "Se reemplazo el equipo danado." });
     await request(app).patch(`${url}/estado`).send({ estado: "CERRADO" });
 
     const res = await request(app).get(url);
@@ -207,7 +209,9 @@ describe("PATCH /api/incidents/:id/estado", () => {
 
     await request(app).patch(`/api/incidents/${creado.id}/asignar`).send({ tecnico_id: 1 });
     await request(app).patch(url).send({ estado: "EN_PROCESO" });
-    await request(app).patch(url).send({ estado: "RESUELTO" });
+    await request(app)
+      .patch(url)
+      .send({ estado: "RESUELTO", nota: "Se reemplazo el equipo danado." });
     const res = await request(app).patch(url).send({ estado: "CERRADO" });
 
     expect(res.status).toBe(200);
