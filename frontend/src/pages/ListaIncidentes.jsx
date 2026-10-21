@@ -16,6 +16,11 @@ const CAMPOS_FILTRO = ["estado", "prioridad", "categoria", "tecnico_id"];
 // 1. Con los filtros habría sido peor, porque también se perderían. Así
 // la pantalla se puede compartir por enlace y el botón de atrás funciona
 // como cualquiera espera.
+//
+// Lo que no previne al hacer el cambio es que la URL deja de ser algo que
+// solo escribe esta pantalla: cualquiera puede pegar una dirección a
+// mano. Eso abre dos casos que antes no existían y que se tratan más
+// abajo, el de una página que no existe y el de un filtro inválido.
 export default function ListaIncidentes() {
   const [params, setParams] = useSearchParams();
   const [datos, setDatos] = useState(null);
@@ -38,8 +43,15 @@ export default function ListaIncidentes() {
 
   // La dependencia del efecto es la cadena de la URL, no el objeto de
   // filtros: ese se construye en cada render y sería distinto cada vez,
-  // así que el efecto no pararía de dispararse.
+  // así que el efecto no pararía de dispararse. Vale porque page y
+  // filtros salen los dos de params, así que cambian cuando cambia esto.
   const consulta = params.toString();
+
+  // Una página más allá de la última devuelve la lista vacía con el total
+  // correcto, no un error. Sin esto la tabla quedaba en blanco y el
+  // paginador decía "Página 99 de 2".
+  const fueraDeRango =
+    datos !== null && datos.totalPages > 0 && page > datos.totalPages;
 
   useEffect(() => {
     let cancelado = false;
@@ -84,6 +96,18 @@ export default function ListaIncidentes() {
     };
   }, []);
 
+  // La URL se corrige a la última página real. Va con replace para no
+  // dejar la dirección inválida en el historial: si se metiera con push,
+  // el botón de atrás regresaría a la página que no existe y el efecto
+  // volvería a corregirla, dejando el historial inservible.
+  useEffect(() => {
+    if (!fueraDeRango) return;
+
+    const siguiente = new URLSearchParams(params);
+    siguiente.set("page", String(datos.totalPages));
+    setParams(siguiente, { replace: true });
+  }, [fueraDeRango]);
+
   // Cambiar un filtro devuelve a la página 1. Sin esto, alguien que está
   // en la página 3 y filtra por CRITICA cae en una página que ya no
   // existe y ve la tabla vacía aunque sí haya resultados.
@@ -113,21 +137,22 @@ export default function ListaIncidentes() {
     setParams(siguiente);
   }
 
-  // Un total de 0 sin filtros aplicados es la única forma de saber que la
-  // base está vacía de verdad. Solo en ese caso se esconde la barra: con
-  // filtros puestos hay que dejarla, porque si no la persona se queda sin
-  // manera de quitarlos y la pantalla parece rota.
-  const sistemaVacio = datos !== null && datos.total === 0 && !hayFiltros;
-  const primeraCarga = cargando && datos === null;
+  // La barra se esconde en un solo caso: cuando la base está vacía de
+  // verdad, que es total 0 sin ningún filtro puesto. En los demás tiene
+  // que quedarse, y eso incluye el error. Un filtro inválido pegado en la
+  // URL devuelve 400, y si la barra desapareciera no habría manera de
+  // corregirlo salvo editar la dirección a mano.
+  const sistemaVacio =
+    !error && datos !== null && datos.total === 0 && !hayFiltros;
+  const primeraCarga = cargando && datos === null && !error;
 
-  if (error) return <p className="aviso error">No se pudo cargar: {error}</p>;
   if (primeraCarga) return <p className="aviso">Cargando incidentes…</p>;
 
   return (
     <section>
       <div className="encabezado-seccion">
         <h1>Incidentes</h1>
-        {datos && (
+        {!error && datos && (
           <span className="conteo">
             {hayFiltros
               ? `${datos.total} coinciden con los filtros`
@@ -146,7 +171,9 @@ export default function ListaIncidentes() {
         />
       )}
 
-      {datos && datos.total === 0 && (
+      {error && <p className="aviso error">No se pudo cargar: {error}</p>}
+
+      {!error && datos && datos.total === 0 && (
         <p className="aviso">
           {hayFiltros
             ? "Ningún incidente coincide con esos filtros."
@@ -154,7 +181,11 @@ export default function ListaIncidentes() {
         </p>
       )}
 
-      {datos && datos.total > 0 && (
+      {!error && datos && datos.total > 0 && datos.items.length === 0 && (
+        <p className="aviso">Esa página no existe; regresando a la última.</p>
+      )}
+
+      {!error && datos && datos.items.length > 0 && (
         <>
           {/* Al cambiar de filtro o de página la tabla anterior se queda a
               la vista, solo atenuada. Reemplazarla por un "Cargando" hacía
