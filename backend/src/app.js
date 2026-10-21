@@ -5,6 +5,7 @@ const incidentsRouter = require("./routes/incidents");
 const usersRouter = require("./routes/users");
 const techniciansRouter = require("./routes/technicians");
 const commentsRouter = require("./routes/comments");
+const { manejarErrores } = require("./http/errores");
 
 const app = express();
 
@@ -19,5 +20,9 @@ app.use("/api", commentsRouter);
 app.use((req, res) => {
   res.status(404).json({ error: "Recurso no encontrado" });
 });
+
+// Tiene que ir al final: Express reconoce un manejador de errores por sus
+// cuatro argumentos, y solo le llegan los errores de lo que está antes.
+app.use(manejarErrores);
 
 module.exports = app;

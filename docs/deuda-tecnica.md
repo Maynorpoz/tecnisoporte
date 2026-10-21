@@ -12,7 +12,7 @@ Cada deuda tiene un impacto, que es lo que pasa si no se paga, y un esfuerzo, qu
 
 | # | Deuda | Detectada en | Impacto | Esfuerzo | Prioridad | Estado |
 |---|---|---|---|---|---|---|
-| D1 | Manejo de errores repetido en cada ruta | PR 1, 4 y 5 | Medio | Bajo | Alta | Task 51 |
+| D1 | Manejo de errores repetido en cada ruta | PR 1, 4 y 5 | Medio | Bajo | Alta | Pagada en PR 21 |
 | D2 | Validación de parámetros repetida en las rutas | PR 5, 15 y 18 | Medio | Bajo | Alta | Task 52 |
 | D3 | Las pruebas borran la base sin revisar cuál es | PR 9 | Alto | Muy bajo | Alta | Task 64 |
 | D4 | Catálogos escritos en tres lugares | PR 4, 6 y 19 | Medio | Medio | Media | Abierta |
@@ -52,6 +52,8 @@ Dos deudas se pagaron antes de este documento, y vale la pena registrarlas porqu
 En el PR 5 anoté que el conteo de la paginación contaba la tabla completa y que el total iba a salir mal en cuanto hubiera filtros. Se pagó en el PR 18, con la Task 21: la consulta de la página y la del total ahora usan el mismo WHERE.
 
 En el PR 6 anoté que la página del listado vivía en el estado del componente, así que se perdía al volver de un detalle. Se pagó en el PR 19, con la Task 22, al pasar los filtros y la página al query string.
+
+La D1, el manejo de errores repetido, se pagó en el PR 21 con la Task 51. Las rutas ya no atrapan sus propios errores: un middleware al final de app.js es el único lugar que responde un 500, con un mensaje genérico. Al hacerlo apareció que el riesgo ya era real: un JSON mal formado devolvía una página HTML con el stack trace y las rutas del disco del servidor. Ahora es un 400 en JSON.
 
 ## Lo que no está aquí
 
