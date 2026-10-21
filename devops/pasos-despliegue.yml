@@ -1,0 +1,53 @@
+# Pasos para desplegar un ambiente. Los usan las etapas Dev, Staging y
+# Prod de azure-pipelines.yml, y son los mismos para las tres: lo que
+# cambia es el ambiente, el puerto y la contraseña, que llegan como
+# variables del job y como parámetro.
+
+parameters:
+  # El valor de la contraseña llega como macro, por ejemplo
+  # $(POSTGRES_PASSWORD_PROD), y se resuelve hasta que corre el paso.
+  - name: password
+    type: string
+
+steps:
+  # Se despliega el paquete que generó la etapa CI, no el repositorio.
+  # Así lo que llega a cada ambiente es exactamente lo que se probó.
+  - download: current
+    artifact: tecnisoporte
+    displayName: Bajar el artefacto
+
+  - task: ExtractFiles@1
+    displayName: Abrir el paquete
+    inputs:
+      archiveFilePatterns: "$(Pipeline.Workspace)/tecnisoporte/tecnisoporte-$(Build.BuildId).zip"
+      destinationFolder: "$(Pipeline.Workspace)/release"
+      cleanDestinationFolder: true
+
+  - script: docker compose -p tecnisoporte-$(AMBIENTE) -f devops/docker-compose.deploy.yml up -d --wait
+    displayName: Levantar $(AMBIENTE) con la version $(Build.BuildId)
+    workingDirectory: $(Pipeline.Workspace)/release
+    env:
+      AMBIENTE: $(AMBIENTE)
+      VERSION: $(Build.BuildId)
+      PUERTO_WEB: $(PUERTO_WEB)
+      POSTGRES_PASSWORD: ${{ parameters.password }}
+
+  # La prueba de humo entra por nginx, igual que un usuario. Si pasa, se
+  # sabe que el frontend sirve, que nginx reenvía a la API y que la API
+  # alcanza la base. Cualquier respuesta que no sea 200 lanza un error y
+  # detiene la promoción al siguiente ambiente.
+  - powershell: |
+      $base = "http://localhost:$(PUERTO_WEB)"
+
+      foreach ($ruta in "/", "/api/health", "/api/metrics", "/api/incidents") {
+        $respuesta = Invoke-WebRequest -Uri "$base$ruta" -UseBasicParsing -TimeoutSec 15
+        Write-Host "OK $($respuesta.StatusCode) $ruta"
+      }
+
+      $salud = Invoke-RestMethod -Uri "$base/api/health" -TimeoutSec 15
+      if ($salud.db -ne "up") {
+        throw "La API responde pero no alcanza la base de datos"
+      }
+
+      Write-Host "$(AMBIENTE) funcionando en $base con la version $(Build.BuildId)"
+    displayName: Prueba de humo en $(AMBIENTE)

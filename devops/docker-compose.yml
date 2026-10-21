@@ -46,9 +46,9 @@ services:
     build:
       context: ../frontend
       args:
-        # El navegador corre en la maquina, no dentro de la red de
-        # compose, asi que la URL de la API es la publicada hacia afuera.
-        VITE_API_URL: http://localhost:3100/api
+        # Ruta relativa: nginx reenvía /api al servicio api de este mismo
+        # stack. Es la misma imagen que se despliega en los ambientes.
+        VITE_API_URL: /api
     container_name: incident-hub-web
     restart: unless-stopped
     ports:

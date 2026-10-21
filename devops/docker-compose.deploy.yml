@@ -1,0 +1,72 @@
+# Stack de un ambiente desplegado: dev, staging o prod.
+#
+# A diferencia de docker-compose.yml, aquí no se compila nada. Las
+# imágenes ya vienen construidas por el pipeline y etiquetadas con el
+# número de build, y este archivo solo las levanta. Es la misma imagen
+# la que pasa por los tres ambientes; lo único que cambia entre uno y
+# otro son las variables:
+#
+#   AMBIENTE           dev, staging o prod. Da nombre a los contenedores
+#   VERSION            etiqueta de las imágenes, el número de build
+#   PUERTO_WEB         puerto publicado hacia la máquina
+#   POSTGRES_PASSWORD  contraseña de la base de ese ambiente
+#
+# El nombre del proyecto se pasa con -p tecnisoporte-<ambiente>, y con él
+# cada ambiente tiene su propia red y su propio volumen de datos.
+
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: tecnisoporte-${AMBIENTE:?falta AMBIENTE}-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: incident_hub
+      POSTGRES_USER: incident_user
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?falta POSTGRES_PASSWORD}
+    # Sin puerto publicado: la base solo se alcanza desde la red del
+    # stack. En un ambiente desplegado nadie se conecta a ella desde fuera.
+    volumes:
+      - datos:/var/lib/postgresql/data
+      # Corre solo cuando se crea el volumen. Los ambientes reciben también
+      # el seed porque, sin login, los usuarios y técnicos solo existen si
+      # los carga la base. Ver docs/release.md.
+      - ../database:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U incident_user -d incident_hub"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  api:
+    image: tecnisoporte-api:${VERSION:?falta VERSION}
+    container_name: tecnisoporte-${AMBIENTE}-api
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: 3100
+      DATABASE_URL: postgresql://incident_user:${POSTGRES_PASSWORD}@db:5432/incident_hub
+    depends_on:
+      db:
+        condition: service_healthy
+    # Con esto docker compose up --wait espera a que la API conteste de
+    # verdad, no solo a que el contenedor arranque.
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3100/api/health || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  web:
+    image: tecnisoporte-web:${VERSION}
+    container_name: tecnisoporte-${AMBIENTE}-web
+    restart: unless-stopped
+    ports:
+      - "${PUERTO_WEB:?falta PUERTO_WEB}:80"
+    # nginx resuelve el nombre api al arrancar; si la API no existe
+    # todavía, nginx no levanta.
+    depends_on:
+      api:
+        condition: service_healthy
+
+volumes:
+  datos:

@@ -1,4 +1,8 @@
-# Pipeline de integracion continua de TecniSoporte.
+# Pipeline de integracion y entrega continua de TecniSoporte.
+#
+# En un PR solo corre la etapa CI. En main, ademas, construye las
+# imagenes una vez y las promueve por dev, staging y prod. Prod espera
+# una aprobacion manual configurada en el environment tecnisoporte-prod.
 #
 # Corre en el agente autohospedado del pool tecnisoporte-local, que es
 # la maquina de desarrollo. Por eso el agente necesita tener instalados
@@ -135,6 +139,7 @@ stages:
                 frontend/nginx.conf
                 database/**
                 devops/docker-compose.yml
+                devops/docker-compose.deploy.yml
                 README.md
               TargetFolder: "$(Build.BinariesDirectory)/paquete"
 
@@ -150,3 +155,91 @@ stages:
           - publish: "$(Build.ArtifactStagingDirectory)"
             displayName: Publicar el artefacto
             artifact: tecnisoporte
+
+  # ---------- Entrega continua ----------
+  #
+  # Todo lo de aqui abajo corre solo en main. Un PR se valida, no se
+  # despliega.
+
+  - stage: Imagenes
+    displayName: Construir imagenes
+    dependsOn: CI
+    condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
+    jobs:
+      - job: imagenes
+        displayName: Construir imagenes de la version
+        steps:
+          - checkout: self
+            clean: true
+
+          # Se construyen una sola vez y se etiquetan con el numero de
+          # build. Los tres ambientes despliegan exactamente estas
+          # imagenes. El agente es la misma maquina donde corren los
+          # ambientes, asi que quedan en su Docker local; con servidores
+          # separados habria que subirlas a un registro de contenedores.
+          - script: docker build -t tecnisoporte-api:$(Build.BuildId) backend
+            displayName: Imagen de la API
+
+          - script: docker build -t tecnisoporte-web:$(Build.BuildId) frontend
+            displayName: Imagen del frontend
+
+  - stage: Dev
+    displayName: Desplegar en dev
+    dependsOn: Imagenes
+    condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
+    jobs:
+      - deployment: desplegar
+        displayName: Desplegar en dev
+        environment: tecnisoporte-dev
+        variables:
+          AMBIENTE: dev
+          PUERTO_WEB: "8110"
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - template: devops/pasos-despliegue.yml
+                  parameters:
+                    password: $(POSTGRES_PASSWORD)
+
+  - stage: Staging
+    displayName: Desplegar en staging
+    dependsOn: Dev
+    condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
+    jobs:
+      - deployment: desplegar
+        displayName: Desplegar en staging
+        environment: tecnisoporte-staging
+        variables:
+          AMBIENTE: staging
+          PUERTO_WEB: "8120"
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - template: devops/pasos-despliegue.yml
+                  parameters:
+                    password: $(POSTGRES_PASSWORD)
+
+  # La aprobacion no esta en este archivo: es un check del environment
+  # tecnisoporte-prod en Azure DevOps. Asi nadie puede quitarla editando
+  # el YAML en una rama; cambiarla exige permisos sobre el environment.
+  # Prod usa su propia contrasena, separada de la de dev y staging.
+  - stage: Prod
+    displayName: Desplegar en prod
+    dependsOn: Staging
+    condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
+    jobs:
+      - deployment: desplegar
+        displayName: Desplegar en prod
+        environment: tecnisoporte-prod
+        variables:
+          AMBIENTE: prod
+          PUERTO_WEB: "8130"
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - template: devops/pasos-despliegue.yml
+                  parameters:
+                    password: $(POSTGRES_PASSWORD_PROD)
