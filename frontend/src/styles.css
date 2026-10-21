@@ -547,3 +547,70 @@ button:disabled {
   opacity: 0.55;
   transition: opacity 120ms ease;
 }
+
+.tarjetas {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.tarjeta {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  background: var(--superficie);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio);
+  padding: 14px 16px;
+  color: var(--texto);
+  text-decoration: none;
+}
+
+a.tarjeta:hover {
+  border-color: var(--acento);
+}
+
+.tarjeta-titulo {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--texto-suave);
+}
+
+.tarjeta-valor {
+  font-size: 30px;
+  line-height: 1.2;
+}
+
+.tarjeta-nota {
+  font-size: 12px;
+  color: var(--texto-suave);
+}
+
+/* Solo se marca en rojo cuando hay al menos un crítico abierto. Una
+   tarjeta roja con un cero adentro acostumbra a ignorar el color. */
+.tarjeta-alerta {
+  border-color: #ffbdad;
+  background: #ffebe6;
+}
+
+.tarjeta-alerta .tarjeta-valor {
+  color: var(--error);
+}
+
+.panel {
+  background: var(--superficie);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio);
+  padding: 16px;
+  margin-bottom: 16px;
+}
+
+.panel h2 {
+  font-size: 15px;
+  margin: 0 0 12px;
+}
+
+.panel .tabla {
+  border: none;
+}

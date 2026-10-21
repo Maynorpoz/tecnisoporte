@@ -74,7 +74,9 @@ export const api = {
 
   listarUsuarios: () => pedir("/users"),
 
-  listarTecnicos: () => pedir("/technicians")
+  listarTecnicos: () => pedir("/technicians"),
+
+  obtenerMetricas: () => pedir("/metrics")
 };
 
 // Estas listas son copia de backend/src/domain/incidents.js. Duplicarlas
