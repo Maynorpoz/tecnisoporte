@@ -2,21 +2,12 @@ import { useCallback, useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { api } from "../api/client.js";
 import Bitacora from "../components/Bitacora.jsx";
+import { ETIQUETA_ESTADO } from "../domain/etiquetas.js";
 
 function fecha(valor) {
   if (!valor) return "—";
   return new Date(valor).toLocaleString("es-GT");
 }
-
-// Las etiquetas que ve el usuario. En la API los estados van en mayuscula
-// y con guion bajo porque así estan en el enum de la base.
-const ETIQUETA_ESTADO = {
-  NUEVO: "Nuevo",
-  ASIGNADO: "Asignado",
-  EN_PROCESO: "En proceso",
-  RESUELTO: "Resuelto",
-  CERRADO: "Cerrado"
-};
 
 export default function DetalleIncidente() {
   const { id } = useParams();

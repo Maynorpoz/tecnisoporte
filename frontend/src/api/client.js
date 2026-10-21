@@ -29,8 +29,21 @@ async function pedir(ruta, opciones = {}) {
 }
 
 export const api = {
-  listarIncidentes: ({ page = 1, pageSize = 10 } = {}) =>
-    pedir(`/incidents?page=${page}&pageSize=${pageSize}`),
+  // Los filtros se arman con URLSearchParams y no concatenando, porque
+  // cualquier valor con espacios o acentos tiene que ir escapado. Los
+  // vacíos no se mandan: un estado="" sería un parámetro más que la API
+  // tendría que ignorar y ensucia la URL sin aportar nada.
+  listarIncidentes: ({ page = 1, pageSize = 10, filtros = {} } = {}) => {
+    const params = new URLSearchParams({ page, pageSize });
+
+    for (const [campo, valor] of Object.entries(filtros)) {
+      if (valor !== undefined && valor !== null && valor !== "") {
+        params.set(campo, valor);
+      }
+    }
+
+    return pedir(`/incidents?${params}`);
+  },
 
   obtenerIncidente: (id) => pedir(`/incidents/${id}`),
 
@@ -64,5 +77,11 @@ export const api = {
   listarTecnicos: () => pedir("/technicians")
 };
 
+// Estas listas son copia de backend/src/domain/incidents.js. Duplicarlas
+// no es gratis: si alguien agrega una categoría allá y se olvida de aquí,
+// el formulario y los filtros no la ofrecen aunque la base ya la acepte.
+// Lo correcto sería que la API sirviera los catálogos en un endpoint y el
+// frontend los pidiera; queda apuntado como deuda.
 export const CATEGORIAS = ["HARDWARE", "SOFTWARE", "RED", "ACCESOS", "OTRO"];
 export const PRIORIDADES = ["BAJA", "MEDIA", "ALTA", "CRITICA"];
+export const ESTADOS = ["NUEVO", "ASIGNADO", "EN_PROCESO", "RESUELTO", "CERRADO"];

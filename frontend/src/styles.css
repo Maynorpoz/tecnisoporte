@@ -494,3 +494,56 @@ button:disabled {
 .form-bitacora select {
   max-width: 260px;
 }
+
+.barra-filtros {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 12px;
+  background: var(--superficie);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio);
+  padding: 12px 14px;
+  margin-bottom: 16px;
+}
+
+.barra-filtros label {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--texto-suave);
+}
+
+.barra-filtros select {
+  font: inherit;
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--texto);
+  padding: 7px 9px;
+  border: 1px solid var(--borde);
+  border-radius: var(--radio);
+  background: #fafbfc;
+  min-width: 140px;
+}
+
+.barra-filtros select:focus {
+  outline: 2px solid var(--acento);
+  outline-offset: -1px;
+  background: var(--superficie);
+}
+
+/* El botón de limpiar se va a la derecha, separado de los selects, para
+   que no se confunda con uno más de los filtros. Con flex-wrap, en una
+   pantalla angosta baja solo a la siguiente línea. */
+.barra-filtros button {
+  margin-left: auto;
+}
+
+/* Mientras llega una página nueva la tabla anterior se queda a la vista,
+   solo atenuada. */
+.tabla.atenuada {
+  opacity: 0.55;
+  transition: opacity 120ms ease;
+}
