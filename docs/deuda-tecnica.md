@@ -14,7 +14,7 @@ Cada deuda tiene un impacto, que es lo que pasa si no se paga, y un esfuerzo, qu
 |---|---|---|---|---|---|---|
 | D1 | Manejo de errores repetido en cada ruta | PR 1, 4 y 5 | Medio | Bajo | Alta | Pagada en PR 21 |
 | D2 | Validación de parámetros repetida en las rutas | PR 5, 15 y 18 | Medio | Bajo | Alta | Pagada en PR 22 |
-| D3 | Las pruebas borran la base sin revisar cuál es | PR 9 | Alto | Muy bajo | Alta | Task 64 |
+| D3 | Las pruebas borran la base sin revisar cuál es | PR 9 | Alto | Muy bajo | Alta | Pagada en PR 23 |
 | D4 | Catálogos escritos en tres lugares | PR 4, 6 y 19 | Medio | Medio | Media | Abierta |
 | D5 | El frontend no tiene pruebas automatizadas | PR 19 | Medio | Medio | Media | Abierta |
 | D6 | El detalle concentra demasiadas responsabilidades | PR 6 y 16 | Medio | Medio | Media | Abierta |
@@ -56,6 +56,8 @@ En el PR 6 anoté que la página del listado vivía en el estado del componente,
 La D1, el manejo de errores repetido, se pagó en el PR 21 con la Task 51. Las rutas ya no atrapan sus propios errores: un middleware al final de app.js es el único lugar que responde un 500, con un mensaje genérico. Al hacerlo apareció que el riesgo ya era real: un JSON mal formado devolvía una página HTML con el stack trace y las rutas del disco del servidor. Ahora es un 400 en JSON.
 
 La D2, la validación repetida, se pagó en el PR 22 con la Task 52. El 400 del id inválido se valida una sola vez por router con router.param, en lugar de estar copiado en cinco rutas. Las piezas comunes quedaron en validation/comun.js: la función que lee enteros devuelve campos con nombre en vez de undefined, null o el número, todos los validadores devuelven la misma forma, y los errores de varios validadores se juntan con una función en lugar de a mano.
+
+La D3, las pruebas que podían borrar otra base, se pagó en el PR 23 con la Task 64. Antes de cargar cualquier módulo, la suite revisa que el nombre de la base termine en _test y se detiene si no. Lo probé apuntando la variable a la base de desarrollo: la suite se negó a correr y la base quedó intacta.
 
 ## Lo que no está aquí
 
