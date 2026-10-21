@@ -84,10 +84,13 @@ Todo cuelga de `/api`. Por ejemplo, el listado es `http://localhost:3100/api/inc
 |---|---|---|
 | GET | `/health` | Dice si la API responde y si alcanza la base |
 | POST | `/incidents` | Crea un incidente. Devuelve 400 con el campo que falló |
-| GET | `/incidents` | Listado paginado con `page` y `pageSize` |
+| GET | `/incidents` | Listado paginado con `page` y `pageSize`. Filtra por `estado`, `prioridad`, `categoria` y `tecnico_id`, que acepta `ninguno` para los que no tienen técnico |
 | GET | `/incidents/:id` | Detalle. 404 si no existe |
 | PATCH | `/incidents/:id/asignar` | Asigna técnico y mueve el incidente a ASIGNADO |
-| PATCH | `/incidents/:id/estado` | Cambia el estado. 409 si la transición no es válida |
+| PATCH | `/incidents/:id/estado` | Cambia el estado. 409 si la transición no es válida. Al pasar a RESUELTO exige una `nota` que queda en la bitácora |
+| GET | `/incidents/:id/comments` | Bitácora del incidente |
+| POST | `/incidents/:id/comments` | Agrega una entrada a la bitácora. 409 si el incidente está cerrado |
+| GET | `/metrics` | Indicadores del dashboard: resumen y distribución por estado, categoría, prioridad y técnico |
 | GET | `/users` | Usuarios que pueden reportar |
 | GET | `/technicians` | Técnicos activos |
 
