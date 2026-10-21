@@ -1,5 +1,6 @@
 const express = require("express");
 const cors = require("cors");
+const config = require("./config/env");
 const healthRouter = require("./routes/health");
 const incidentsRouter = require("./routes/incidents");
 const usersRouter = require("./routes/users");
@@ -10,7 +11,10 @@ const { manejarErrores } = require("./http/errores");
 
 const app = express();
 
-app.use(cors());
+// Antes CORS estaba abierto a cualquier origen, y así desplegado cualquier
+// sitio podía llamar a la API desde el navegador de quien lo visitara.
+// Ahora solo responde con permiso al frontend propio.
+app.use(cors({ origin: config.corsOrigin }));
 app.use(express.json());
 app.use("/api", healthRouter);
 app.use("/api", incidentsRouter);
