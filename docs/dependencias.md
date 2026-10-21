@@ -72,6 +72,14 @@ cors          presente
 
 **3. Ninguna es crítica.** Que es exactamente donde puse el umbral de los dos CI.
 
+## Recharts en el frontend
+
+El 21 de octubre agregué Recharts para la gráfica del dashboard. Es la primera dependencia nueva de producción desde este análisis, así que la medí antes de quedarme con ella.
+
+Las dependencias de producción del frontend pasaron de 8 a 47, porque Recharts trae su propio manejo de estado. `npm audit` sigue en cero vulnerabilidades. La fijé en la versión exacta, 3.10.1, sin el ^, para que una actualización no entre sin pasar por un PR.
+
+El peso sí era un problema: Recharts solo ocupa más que todo el resto de la aplicación. Por eso el dashboard se carga de forma diferida. El bundle principal quedó prácticamente igual, en 87 kB comprimido, y Recharts va en un archivo aparte de 108 kB que solo se descarga al abrir el dashboard.
+
 ## Cuándo lo vuelvo a mirar
 
 - Cada vez que el pipeline reporte una **crítica**, que detiene la entrega y hay que resolverla antes de seguir
