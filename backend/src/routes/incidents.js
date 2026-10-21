@@ -13,6 +13,7 @@ const {
   siguientesEstados,
   columnaDeFecha
 } = require("../domain/estados");
+const { asincrono } = require("../http/errores");
 
 const router = express.Router();
 
@@ -20,64 +21,68 @@ const router = express.Router();
 // distinguir "mandaste un usuario_id que no existe" de un error real.
 const FK_VIOLATION = "23503";
 
-router.post("/incidents", async (req, res) => {
-  const { valido, errores, datos } = validarNuevoIncidente(req.body || {});
+router.post(
+  "/incidents",
+  asincrono(async (req, res) => {
+    const { valido, errores, datos } = validarNuevoIncidente(req.body || {});
 
-  if (!valido) {
-    return res.status(400).json({ error: "Datos inválidos", detalles: errores });
-  }
-
-  try {
-    const incidente = await incidentes.crear(datos);
-    return res.status(201).json(incidente);
-  } catch (error) {
-    if (error.code === FK_VIOLATION) {
-      return res.status(400).json({
-        error: "Datos inválidos",
-        detalles: [{ campo: "usuario_id", mensaje: "El usuario no existe" }]
-      });
+    if (!valido) {
+      return res.status(400).json({ error: "Datos inválidos", detalles: errores });
     }
 
-    console.error("Error al crear incidente:", error);
-    return res.status(500).json({ error: "No se pudo crear el incidente" });
-  }
-});
+    // Este es el único try/catch que queda en las rutas, y no es para el
+    // 500. Un usuario_id inexistente lo descubre la base con la llave
+    // foránea, y eso es un error del cliente que hay que traducir a 400.
+    // Cualquier otra falla sigue de largo al middleware de errores.
+    try {
+      const incidente = await incidentes.crear(datos);
+      return res.status(201).json(incidente);
+    } catch (error) {
+      if (error.code === FK_VIOLATION) {
+        return res.status(400).json({
+          error: "Datos inválidos",
+          detalles: [{ campo: "usuario_id", mensaje: "El usuario no existe" }]
+        });
+      }
+      throw error;
+    }
+  })
+);
 
-router.get("/incidents", async (req, res) => {
-  const paginacion = validarPaginacion(req.query || {});
-  const filtros = validarFiltros(req.query || {});
+router.get(
+  "/incidents",
+  asincrono(async (req, res) => {
+    const paginacion = validarPaginacion(req.query || {});
+    const filtros = validarFiltros(req.query || {});
 
-  // Se juntan los errores de los dos para que una petición con varios
-  // parámetros malos los reporte todos de una vez y no de uno en uno.
-  const errores = [...paginacion.errores, ...filtros.errores];
+    // Se juntan los errores de los dos para que una petición con varios
+    // parámetros malos los reporte todos de una vez y no de uno en uno.
+    const errores = [...paginacion.errores, ...filtros.errores];
 
-  if (errores.length > 0) {
-    return res.status(400).json({ error: "Parámetros inválidos", detalles: errores });
-  }
+    if (errores.length > 0) {
+      return res.status(400).json({ error: "Parámetros inválidos", detalles: errores });
+    }
 
-  try {
     const resultado = await incidentes.listar({
       ...paginacion.datos,
       filtros: filtros.datos
     });
     return res.json(resultado);
-  } catch (error) {
-    console.error("Error al listar incidentes:", error);
-    return res.status(500).json({ error: "No se pudieron listar los incidentes" });
-  }
-});
+  })
+);
 
-router.get("/incidents/:id", async (req, res) => {
-  const id = validarId(req.params.id);
+router.get(
+  "/incidents/:id",
+  asincrono(async (req, res) => {
+    const id = validarId(req.params.id);
 
-  if (id === null) {
-    return res.status(400).json({
-      error: "Parámetros inválidos",
-      detalles: [{ campo: "id", mensaje: "El id debe ser un entero positivo" }]
-    });
-  }
+    if (id === null) {
+      return res.status(400).json({
+        error: "Parámetros inválidos",
+        detalles: [{ campo: "id", mensaje: "El id debe ser un entero positivo" }]
+      });
+    }
 
-  try {
     const incidente = await incidentes.obtenerPorId(id);
 
     if (!incidente) {
@@ -91,33 +96,31 @@ router.get("/incidents/:id", async (req, res) => {
       ...incidente,
       transiciones_posibles: siguientesEstados(incidente.estado)
     });
-  } catch (error) {
-    console.error("Error al obtener incidente:", error);
-    return res.status(500).json({ error: "No se pudo obtener el incidente" });
-  }
-});
+  })
+);
 
-router.patch("/incidents/:id/asignar", async (req, res) => {
-  const id = validarId(req.params.id);
-  const tecnicoId = validarId((req.body || {}).tecnico_id);
+router.patch(
+  "/incidents/:id/asignar",
+  asincrono(async (req, res) => {
+    const id = validarId(req.params.id);
+    const tecnicoId = validarId((req.body || {}).tecnico_id);
 
-  if (id === null) {
-    return res.status(400).json({
-      error: "Parámetros inválidos",
-      detalles: [{ campo: "id", mensaje: "El id debe ser un entero positivo" }]
-    });
-  }
+    if (id === null) {
+      return res.status(400).json({
+        error: "Parámetros inválidos",
+        detalles: [{ campo: "id", mensaje: "El id debe ser un entero positivo" }]
+      });
+    }
 
-  if (tecnicoId === null) {
-    return res.status(400).json({
-      error: "Datos inválidos",
-      detalles: [
-        { campo: "tecnico_id", mensaje: "El tecnico_id debe ser un entero positivo" }
-      ]
-    });
-  }
+    if (tecnicoId === null) {
+      return res.status(400).json({
+        error: "Datos inválidos",
+        detalles: [
+          { campo: "tecnico_id", mensaje: "El tecnico_id debe ser un entero positivo" }
+        ]
+      });
+    }
 
-  try {
     const incidente = await incidentes.obtenerPorId(id);
 
     if (!incidente) {
@@ -140,24 +143,22 @@ router.patch("/incidents/:id/asignar", async (req, res) => {
     }
 
     return res.json(await incidentes.asignarTecnico(id, tecnicoId));
-  } catch (error) {
-    console.error("Error al asignar tecnico:", error);
-    return res.status(500).json({ error: "No se pudo asignar el técnico" });
-  }
-});
+  })
+);
 
-router.patch("/incidents/:id/estado", async (req, res) => {
-  const id = validarId(req.params.id);
-  const nuevoEstado = (req.body || {}).estado;
+router.patch(
+  "/incidents/:id/estado",
+  asincrono(async (req, res) => {
+    const id = validarId(req.params.id);
+    const nuevoEstado = (req.body || {}).estado;
 
-  if (id === null) {
-    return res.status(400).json({
-      error: "Parámetros inválidos",
-      detalles: [{ campo: "id", mensaje: "El id debe ser un entero positivo" }]
-    });
-  }
+    if (id === null) {
+      return res.status(400).json({
+        error: "Parámetros inválidos",
+        detalles: [{ campo: "id", mensaje: "El id debe ser un entero positivo" }]
+      });
+    }
 
-  try {
     const incidente = await incidentes.obtenerPorId(id);
 
     if (!incidente) {
@@ -202,10 +203,7 @@ router.patch("/incidents/:id/estado", async (req, res) => {
     );
 
     return res.json(actualizado);
-  } catch (error) {
-    console.error("Error al cambiar estado:", error);
-    return res.status(500).json({ error: "No se pudo cambiar el estado" });
-  }
-});
+  })
+);
 
 module.exports = router;
