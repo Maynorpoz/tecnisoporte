@@ -10,9 +10,9 @@ RUN npm ci
 COPY . .
 
 # Vite incrusta las VITE_* en el bundle en tiempo de build, no de arranque.
-# Por eso la URL de la API entra como argumento del build y no como
-# variable del contenedor.
-ARG VITE_API_URL=http://localhost:3100/api
+# Por eso el valor por defecto es una ruta relativa y no una URL completa:
+# nginx reenvía /api a la API, y la imagen no queda atada a un ambiente.
+ARG VITE_API_URL=/api
 ENV VITE_API_URL=$VITE_API_URL
 RUN npm run build
 
