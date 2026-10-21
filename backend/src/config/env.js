@@ -22,5 +22,9 @@ if (faltantes.length > 0) {
 module.exports = {
   nodeEnv: process.env.NODE_ENV || "development",
   port: Number(process.env.PORT) || 3000,
-  databaseUrl: process.env.DATABASE_URL
+  databaseUrl: process.env.DATABASE_URL,
+  // El único origen al que el navegador le permite llamar a la API. En
+  // local y en el compose el frontend corre en el 5173; en otro ambiente
+  // se cambia con la variable, sin tocar código.
+  corsOrigin: process.env.CORS_ORIGIN || "http://localhost:5173"
 };
