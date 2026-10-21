@@ -4,14 +4,11 @@ const {
   ESTADOS,
   PRIORIDAD_POR_DEFECTO
 } = require("../domain/incidents");
+const { esTextoUtil, leerEnteroPositivo, resultado } = require("./comun");
 
 const TITULO_MIN = 5;
 const TITULO_MAX = 150;
 const DESCRIPCION_MIN = 10;
-
-function esTextoUtil(valor) {
-  return typeof valor === "string" && valor.trim().length > 0;
-}
 
 // Valida el cuerpo de un POST /incidents. No toca la base: recibe el
 // body y devuelve los errores y los datos ya limpios, así se puede
@@ -78,50 +75,42 @@ function validarNuevoIncidente(body) {
     datos.usuario_id = body.usuario_id;
   }
 
-  return { valido: errores.length === 0, errores, datos };
+  return resultado(errores, datos);
 }
 
 const PAGE_SIZE_POR_DEFECTO = 20;
 const PAGE_SIZE_MAX = 100;
 
-// Los query params siempre llegan como texto, así que hay que convertir
-// antes de comparar. Un valor ausente toma el default; uno inválido es
-// error, porque ?page=abc casi siempre es un bug del cliente y es peor
-// devolverle la pagina 1 en silencio.
-function aEnteroPositivo(valor) {
-  if (valor === undefined || valor === "") return undefined;
-  if (!/^\d+$/.test(String(valor))) return null;
-  const numero = Number(valor);
-  return numero >= 1 ? numero : null;
-}
-
+// Un valor ausente toma el default; uno inválido es error, porque
+// ?page=abc casi siempre es un bug del cliente y es peor devolverle la
+// página 1 en silencio.
 function validarPaginacion(query) {
   const errores = [];
   const datos = {};
 
-  const page = aEnteroPositivo(query.page);
-  if (page === null) {
+  const page = leerEnteroPositivo(query.page);
+  if (page.invalido) {
     errores.push({ campo: "page", mensaje: "page debe ser un entero mayor o igual a 1" });
   } else {
-    datos.page = page === undefined ? 1 : page;
+    datos.page = page.presente ? page.valor : 1;
   }
 
-  const pageSize = aEnteroPositivo(query.pageSize);
-  if (pageSize === null) {
+  const pageSize = leerEnteroPositivo(query.pageSize);
+  if (pageSize.invalido) {
     errores.push({
       campo: "pageSize",
       mensaje: `pageSize debe ser un entero entre 1 y ${PAGE_SIZE_MAX}`
     });
-  } else if (pageSize !== undefined && pageSize > PAGE_SIZE_MAX) {
+  } else if (pageSize.presente && pageSize.valor > PAGE_SIZE_MAX) {
     errores.push({
       campo: "pageSize",
       mensaje: `pageSize no puede ser mayor a ${PAGE_SIZE_MAX}`
     });
   } else {
-    datos.pageSize = pageSize === undefined ? PAGE_SIZE_POR_DEFECTO : pageSize;
+    datos.pageSize = pageSize.presente ? pageSize.valor : PAGE_SIZE_POR_DEFECTO;
   }
 
-  return { valido: errores.length === 0, errores, datos };
+  return resultado(errores, datos);
 }
 
 // Filtros del listado. Son opcionales y combinables; cada uno se valida
@@ -158,24 +147,25 @@ function validarFiltros(query) {
     if (tecnico === "ninguno") {
       datos.sin_tecnico = true;
     } else {
-      const id = aEnteroPositivo(tecnico);
-      if (id === null || id === undefined) {
+      const id = leerEnteroPositivo(tecnico);
+      if (id.invalido) {
         errores.push({
           campo: "tecnico_id",
           mensaje: "tecnico_id debe ser un entero positivo o la palabra ninguno"
         });
       } else {
-        datos.tecnico_id = id;
+        datos.tecnico_id = id.valor;
       }
     }
   }
 
-  return { valido: errores.length === 0, errores, datos };
+  return resultado(errores, datos);
 }
 
+// Un id es obligatorio, así que aquí no venir y venir mal son lo mismo.
 function validarId(valor) {
-  const id = aEnteroPositivo(valor);
-  return id === null || id === undefined ? null : id;
+  const id = leerEnteroPositivo(valor);
+  return id.presente && !id.invalido ? id.valor : null;
 }
 
 module.exports = {

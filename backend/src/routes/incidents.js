@@ -6,6 +6,7 @@ const {
   validarId
 } = require("../validation/incidents");
 const { validarNotaDeEstado } = require("../validation/comments");
+const { juntarErrores } = require("../validation/comun");
 const incidentes = require("../db/incidents");
 const tecnicos = require("../db/technicians");
 const {
@@ -14,8 +15,11 @@ const {
   columnaDeFecha
 } = require("../domain/estados");
 const { asincrono } = require("../http/errores");
+const { validarParamId } = require("../http/parametros");
 
 const router = express.Router();
+
+router.param("id", validarParamId);
 
 // Código de Postgres para violacion de llave foranea. Lo usamos para
 // distinguir "mandaste un usuario_id que no existe" de un error real.
@@ -55,11 +59,9 @@ router.get(
     const paginacion = validarPaginacion(req.query || {});
     const filtros = validarFiltros(req.query || {});
 
-    // Se juntan los errores de los dos para que una petición con varios
-    // parámetros malos los reporte todos de una vez y no de uno en uno.
-    const errores = [...paginacion.errores, ...filtros.errores];
+    const { valido, errores } = juntarErrores(paginacion, filtros);
 
-    if (errores.length > 0) {
+    if (!valido) {
       return res.status(400).json({ error: "Parámetros inválidos", detalles: errores });
     }
 
@@ -74,14 +76,7 @@ router.get(
 router.get(
   "/incidents/:id",
   asincrono(async (req, res) => {
-    const id = validarId(req.params.id);
-
-    if (id === null) {
-      return res.status(400).json({
-        error: "Parámetros inválidos",
-        detalles: [{ campo: "id", mensaje: "El id debe ser un entero positivo" }]
-      });
-    }
+    const id = req.incidenteId;
 
     const incidente = await incidentes.obtenerPorId(id);
 
@@ -102,15 +97,8 @@ router.get(
 router.patch(
   "/incidents/:id/asignar",
   asincrono(async (req, res) => {
-    const id = validarId(req.params.id);
+    const id = req.incidenteId;
     const tecnicoId = validarId((req.body || {}).tecnico_id);
-
-    if (id === null) {
-      return res.status(400).json({
-        error: "Parámetros inválidos",
-        detalles: [{ campo: "id", mensaje: "El id debe ser un entero positivo" }]
-      });
-    }
 
     if (tecnicoId === null) {
       return res.status(400).json({
@@ -149,15 +137,8 @@ router.patch(
 router.patch(
   "/incidents/:id/estado",
   asincrono(async (req, res) => {
-    const id = validarId(req.params.id);
+    const id = req.incidenteId;
     const nuevoEstado = (req.body || {}).estado;
-
-    if (id === null) {
-      return res.status(400).json({
-        error: "Parámetros inválidos",
-        detalles: [{ campo: "id", mensaje: "El id debe ser un entero positivo" }]
-      });
-    }
 
     const incidente = await incidentes.obtenerPorId(id);
 

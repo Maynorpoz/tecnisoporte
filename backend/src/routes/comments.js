@@ -1,23 +1,18 @@
 const express = require("express");
-const { validarId } = require("../validation/incidents");
 const { validarNuevoComentario } = require("../validation/comments");
 const incidentes = require("../db/incidents");
 const comentarios = require("../db/comments");
 const { asincrono } = require("../http/errores");
+const { validarParamId } = require("../http/parametros");
 
 const router = express.Router();
+
+router.param("id", validarParamId);
 
 router.get(
   "/incidents/:id/comments",
   asincrono(async (req, res) => {
-    const id = validarId(req.params.id);
-
-    if (id === null) {
-      return res.status(400).json({
-        error: "Parámetros inválidos",
-        detalles: [{ campo: "id", mensaje: "El id debe ser un entero positivo" }]
-      });
-    }
+    const id = req.incidenteId;
 
     // Se comprueba que el incidente exista para poder distinguir
     // "no hay comentarios" de "ese incidente no existe". Sin esto, pedir
@@ -34,14 +29,7 @@ router.get(
 router.post(
   "/incidents/:id/comments",
   asincrono(async (req, res) => {
-    const id = validarId(req.params.id);
-
-    if (id === null) {
-      return res.status(400).json({
-        error: "Parámetros inválidos",
-        detalles: [{ campo: "id", mensaje: "El id debe ser un entero positivo" }]
-      });
-    }
+    const id = req.incidenteId;
 
     const { valido, errores, datos } = validarNuevoComentario(req.body || {});
 
