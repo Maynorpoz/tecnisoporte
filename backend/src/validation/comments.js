@@ -1,9 +1,7 @@
+const { esTextoUtil, resultado } = require("./comun");
+
 const AUTOR_MAX = 120;
 const CUERPO_MIN = 10;
-
-function esTextoUtil(valor) {
-  return typeof valor === "string" && valor.trim().length > 0;
-}
 
 function validarNuevoComentario(body) {
   const errores = [];
@@ -31,47 +29,37 @@ function validarNuevoComentario(body) {
     datos.cuerpo = body.cuerpo.trim();
   }
 
-  return { valido: errores.length === 0, errores, datos };
+  return resultado(errores, datos);
 }
 
 // La nota que acompaña un cambio de estado. Es opcional salvo al
 // resolver: ahi es el momento en que el técnico sabe como lo arreglo, y
 // si no se le pide en ese instante no lo escribe nunca.
+//
+// Tiene la misma forma que los demás validadores, acumulando en una lista
+// aunque hoy valide un solo campo. Antes cortaba en el primer error con
+// tres return distintos, y agregarle una regla obligaba a reescribirla.
 function validarNotaDeEstado(nota, nuevoEstado) {
-  const obligatoria = nuevoEstado === "RESUELTO";
-  const vino = esTextoUtil(nota);
+  const errores = [];
+  const datos = { nota: null };
 
-  if (!vino) {
-    if (obligatoria) {
-      return {
-        valido: false,
-        errores: [
-          {
-            campo: "nota",
-            mensaje:
-              "Al resolver hay que explicar cómo se solucionó el incidente"
-          }
-        ],
-        datos: {}
-      };
+  if (!esTextoUtil(nota)) {
+    if (nuevoEstado === "RESUELTO") {
+      errores.push({
+        campo: "nota",
+        mensaje: "Al resolver hay que explicar cómo se solucionó el incidente"
+      });
     }
-    return { valido: true, errores: [], datos: { nota: null } };
+  } else if (nota.trim().length < CUERPO_MIN) {
+    errores.push({
+      campo: "nota",
+      mensaje: `La nota debe tener al menos ${CUERPO_MIN} caracteres`
+    });
+  } else {
+    datos.nota = nota.trim();
   }
 
-  if (nota.trim().length < CUERPO_MIN) {
-    return {
-      valido: false,
-      errores: [
-        {
-          campo: "nota",
-          mensaje: `La nota debe tener al menos ${CUERPO_MIN} caracteres`
-        }
-      ],
-      datos: {}
-    };
-  }
-
-  return { valido: true, errores: [], datos: { nota: nota.trim() } };
+  return resultado(errores, datos);
 }
 
 module.exports = {
