@@ -14,7 +14,7 @@ Cada deuda tiene un impacto, que es lo que pasa si no se paga, y un esfuerzo, qu
 |---|---|---|---|---|---|---|
 | D1 | Manejo de errores repetido en cada ruta | PR 1, 4 y 5 | Medio | Bajo | Alta | Task 51 |
 | D2 | Validación de parámetros repetida en las rutas | PR 5, 15 y 18 | Medio | Bajo | Alta | Task 52 |
-| D3 | Las pruebas borran la base sin revisar cuál es | PR 9 | Alto | Muy bajo | Alta | Abierta |
+| D3 | Las pruebas borran la base sin revisar cuál es | PR 9 | Alto | Muy bajo | Alta | Task 64 |
 | D4 | Catálogos escritos en tres lugares | PR 4, 6 y 19 | Medio | Medio | Media | Abierta |
 | D5 | El frontend no tiene pruebas automatizadas | PR 19 | Medio | Medio | Media | Abierta |
 | D6 | El detalle concentra demasiadas responsabilidades | PR 6 y 16 | Medio | Medio | Media | Abierta |
