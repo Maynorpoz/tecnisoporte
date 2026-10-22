@@ -4,9 +4,15 @@ TecniSoporte sigue [versionado semántico](https://semver.org/lang/es/). Mientra
 
 Cada versión es un tag de git sobre el merge que cerró ese entregable. Las tres primeras se etiquetaron el 22 de octubre sobre commits que ya existían, cuando se definió esta convención; el mensaje de cada tag lo dice.
 
-## Sin publicar
+## 1.0.0
 
-Lo que va a formar la 1.0.0: la estrategia de release en `docs/release.md`, el README final y el ensayo de la demostración completa.
+Merge del PR 31. La versión de la entrega.
+
+- Estrategia de release en `docs/release.md`: ambientes, controles antes de prod y cómo volver atrás
+- Corregido el control de vulnerabilidades críticas del pipeline, que no se ejecutaba en el agente Windows (Bug AB#65)
+- Versionado semántico con tags y este registro de cambios
+- README final con instalación, ejecución, pruebas, pipeline y ambientes
+- Este mismo cambio recorrió el ciclo completo como ensayo de la demostración: Task, rama, PR, pipeline, dev, staging, aprobación y prod
 
 ## 0.3.0
 
