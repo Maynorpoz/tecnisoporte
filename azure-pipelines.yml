@@ -45,7 +45,7 @@ stages:
               echo "Agente:  $(Agent.Name)"
               echo "Rama:    $(Build.SourceBranchName)"
               node --version
-              npm --version
+              call npm --version
               docker --version
             displayName: Diagnostico del agente
 
@@ -109,15 +109,22 @@ stages:
           # Solo detiene el pipeline ante vulnerabilidades criticas. Las
           # de severidad menor se documentan y se deciden en
           # docs/dependencias.md, no bloquean la entrega.
+          #
+          # El agente es Windows y estos pasos corren en cmd. Ahi npm es un
+          # archivo por lotes, y sin call el script termina despues del
+          # primer npm: la linea del umbral nunca se ejecutaba (Bug AB#65).
+          # El codigo de salida del paso es el de la ultima linea, asi que
+          # el reporte JSON se guarda aunque tenga hallazgos y solo el
+          # umbral decide si el build falla.
           - script: |
-              npm audit --json > "$(Build.ArtifactStagingDirectory)/audit-backend.json" || true
-              npm audit --audit-level=critical
+              call npm audit --json > "$(Build.ArtifactStagingDirectory)/audit-backend.json"
+              call npm audit --audit-level=critical
             displayName: Revisar dependencias del backend
             workingDirectory: backend
 
           - script: |
-              npm audit --json > "$(Build.ArtifactStagingDirectory)/audit-frontend.json" || true
-              npm audit --audit-level=critical
+              call npm audit --json > "$(Build.ArtifactStagingDirectory)/audit-frontend.json"
+              call npm audit --audit-level=critical
             displayName: Revisar dependencias del frontend
             workingDirectory: frontend
 

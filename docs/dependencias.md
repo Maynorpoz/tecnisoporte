@@ -12,6 +12,12 @@ Con `npm audit`, que compara el árbol de dependencias contra la base de avisos 
 
 En los dos CI el umbral es el mismo: **solo una vulnerabilidad crítica detiene la entrega**. Si fueran distintos tendría dos sistemas contradiciéndose, y acabaría ignorando al más estricto.
 
+### El control de Azure no corría
+
+El 22 de octubre descubrí que, en Azure, la línea con el umbral nunca se había ejecutado. El agente es Windows, y ahí npm es un archivo por lotes; un script de cmd que lo llama sin `call` termina en ese punto. El paso guardaba el reporte JSON y se detenía antes del control. Los logs de los builds anteriores no tienen ni una línea del audit.
+
+Se destapó cuando un build falló por el `|| true`, que es sintaxis de bash y no existe en cmd. Quedó registrado como Bug AB#65 y corregido en el PR 29. Durante ese tiempo el workflow de GitHub Actions sí aplicaba el control, porque corre en Linux, así que ninguna crítica habría pasado sin que alguno de los dos la viera. Las revisiones manuales de este documento tampoco dependían del pipeline.
+
 ## Qué encontré
 
 La primera revisión completa, el 19 de octubre, dio esto:
