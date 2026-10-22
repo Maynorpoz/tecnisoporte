@@ -2,45 +2,65 @@
 
 Sistema web de gestión de incidentes de TI. Proyecto integrador DevOps — Análisis de Sistemas II, Universidad Mariano Gálvez.
 
-> El README se completa en la semana 3 (Task *"Actualizar README y ensayar la demo de punta a punta"*). Por ahora cubre cómo levantar el proyecto y qué expone la API.
+Un usuario reporta un incidente, un técnico lo toma y lo lleva de NUEVO a CERRADO dejando una bitácora de lo que hizo, y el jefe de TI ve la carga y los pendientes en un dashboard. La aplicación es el medio: lo que este proyecto demuestra es el proceso con el que se construyó, desde el backlog hasta prod.
+
+## Dónde está cada cosa
+
+| Qué | Dónde |
+|---|---|
+| Backlog, sprints y work items | [Azure Boards](https://dev.azure.com/devopsmaynor/incident/_boards) |
+| Repositorio principal y Pull Requests | [Azure Repos](https://dev.azure.com/devopsmaynor/incident/_git/incident) |
+| Pipeline de CI/CD y ambientes | [Azure Pipelines](https://dev.azure.com/devopsmaynor/incident/_build) |
+| Espejo con GitHub Actions | [GitHub](https://github.com/Maynorpoz/tecnisoporte) |
+| Decisiones del proceso | [`docs/`](docs/) |
+| Cambios por versión | [`CHANGELOG.md`](CHANGELOG.md) |
+
+## Cómo se trabaja
+
+Ningún cambio entra a `main` sin pasar por este ciclo:
+
+```
+Task en Boards -> rama -> commits con AB#<id> -> Pull Request -> pipeline -> merge -> dev -> staging -> aprobación -> prod
+```
+
+Cada PR necesita un work item vinculado, la autorevisión con sus comentarios resueltos y el build en verde. Después del merge, el pipeline construye las imágenes una sola vez y las promueve por los tres ambientes; prod espera una aprobación manual. El detalle está en [`docs/branching.md`](docs/branching.md) y [`docs/release.md`](docs/release.md).
 
 ## Stack
 
 | Capa | Tecnología |
 |---|---|
-| Frontend | React + Vite |
+| Frontend | React 19 + Vite, con Recharts en el dashboard |
 | Backend | Node.js + Express |
-| Base de datos | PostgreSQL 16 (Docker) |
+| Base de datos | PostgreSQL 16 en Docker |
 | Pruebas | Jest + Supertest |
-| CI/CD | Azure Pipelines (self-hosted agent) + GitHub Actions |
+| CI/CD | Azure Pipelines con agente autohospedado, más GitHub Actions |
+| Despliegue | Docker Compose, un stack por ambiente, con nginx delante del frontend |
 
 ## Requisitos
 
 - Node.js 20 o superior
-- Docker y Docker Compose
+- Docker Desktop con Docker Compose
 - Git
 
-## Puertos
-
-No son los de por defecto, porque en la máquina de desarrollo hay otros proyectos ocupando el 5432 y el 3000.
-
-| Servicio | Puerto |
-|---|---|
-| Frontend | 5173 |
-| API | 3100 |
-| PostgreSQL | 5435 |
-
-## Todo con Docker
-
-Es la forma más rápida de ver el sistema funcionando. Levanta base, API y frontend.
+## Instalación
 
 ```bash
-git clone <url-del-repo>
-cd incident
+git clone https://github.com/Maynorpoz/tecnisoporte.git
+cd tecnisoporte
 
 cp .env.example .env
-# edita .env y pon tus valores locales
+cp frontend/.env.example frontend/.env
+```
 
+Edita los dos `.env` con tus valores locales. Ninguno se sube al repositorio. Qué es secreto y dónde vive cada cosa está en [`docs/seguridad.md`](docs/seguridad.md).
+
+## Ejecución
+
+### Todo con Docker
+
+La forma más rápida de ver el sistema funcionando. Levanta la base, la API y el frontend.
+
+```bash
 docker compose --env-file .env -f devops/docker-compose.yml up -d --build
 ```
 
@@ -48,9 +68,9 @@ Luego abre <http://localhost:5173>.
 
 El `--env-file .env` es necesario: sin él, Compose busca el archivo junto al `docker-compose.yml`, que está en `devops/`, y la contraseña de Postgres queda vacía.
 
-## En modo desarrollo
+### En modo desarrollo
 
-Útil cuando se está programando, porque trae recarga automática.
+Con recarga automática, para programar.
 
 ```bash
 # Solo la base de datos en Docker
@@ -63,22 +83,61 @@ cd backend && npm ci && npm run dev     # http://localhost:3100
 cd frontend && npm ci && npm run dev    # http://localhost:5173
 ```
 
-El frontend lee la URL de la API de `frontend/.env`; copia el `.env.example` de esa carpeta si no existe.
+### Pruebas
 
-## Scripts
+Las pruebas usan su propia base, en otro contenedor, para no tocar los datos de desarrollo. La suite se niega a correr si el nombre de la base no termina en `_test`.
 
-| Carpeta | Comando | Qué hace |
-|---|---|---|
-| backend | `npm run dev` | Levanta la API con recarga automática |
-| backend | `npm start` | Levanta la API |
-| backend | `npm test` | Corre la suite de pruebas |
-| backend | `npm run lint` | Analiza el código con ESLint |
-| frontend | `npm run dev` | Levanta Vite con recarga automática |
-| frontend | `npm run build` | Compila a `dist/` |
+```bash
+docker compose --env-file .env -f devops/docker-compose.test.yml up -d --wait
+cd backend && npm test
+docker compose --env-file .env -f devops/docker-compose.test.yml down -v
+```
+
+Son 94 pruebas, entre unitarias y de API. Conviene bajar esa base al terminar: el pipeline usa el mismo contenedor en esta máquina, y si la encuentra levantada con otra contraseña, el build falla.
+
+## Puertos
+
+No son los de por defecto, porque en la máquina de desarrollo hay otros proyectos ocupando el 5432 y el 3000.
+
+| Servicio | Puerto |
+|---|---|
+| Frontend en desarrollo | 5173 |
+| API en desarrollo | 3100 |
+| PostgreSQL de desarrollo | 5435 |
+| PostgreSQL de pruebas | 5436 |
+| Ambiente dev | 8110 |
+| Ambiente staging | 8120 |
+| Ambiente prod | 8130 |
+
+Los tres ambientes los levanta el pipeline, no se levantan a mano. En cada uno, nginx sirve el frontend y reenvía `/api` a la API de ese mismo ambiente.
+
+## Pipeline
+
+En un Pull Request corre solo la etapa CI. Con el merge a `main` corre todo:
+
+| Etapa | Qué hace |
+|---|---|
+| Build, pruebas y empaquetado | Lint, compilación del frontend, la suite completa contra una base efímera, revisión de dependencias y el artefacto |
+| Construir imágenes | La imagen de la API y la del frontend, etiquetadas con el número de build |
+| Desplegar en dev | Levanta el ambiente y le hace una prueba de humo |
+| Desplegar en staging | Igual, solo si dev pasó |
+| Desplegar en prod | Espera la aprobación manual, después despliega y prueba |
+
+El workflow de GitHub Actions corre la misma validación en Linux en cada push al espejo.
+
+## Versiones
+
+Versionado semántico con tags de git. Cada entregable semanal tiene su tag, y la 1.0.0 es la versión de la entrega. Lo que trae cada una está en [`CHANGELOG.md`](CHANGELOG.md).
+
+Para saber qué versión corre en un ambiente:
+
+```bash
+docker inspect --format "{{.Config.Image}}" tecnisoporte-prod-api
+```
 
 ## API
 
-Todo cuelga de `/api`. Por ejemplo, el listado es `http://localhost:3100/api/incidents`.
+Todo cuelga de `/api`. Por ejemplo, el listado en desarrollo es `http://localhost:3100/api/incidents`.
 
 | Método | Ruta | Qué hace |
 |---|---|---|
@@ -94,15 +153,13 @@ Todo cuelga de `/api`. Por ejemplo, el listado es `http://localhost:3100/api/inc
 | GET | `/users` | Usuarios que pueden reportar |
 | GET | `/technicians` | Técnicos activos |
 
-### Estados de un incidente
+El flujo de estados es de un solo sentido:
 
 ```
 NUEVO → ASIGNADO → EN_PROCESO → RESUELTO → CERRADO
 ```
 
-El flujo es de un solo sentido. Cualquier otro salto responde 409, e incluye en la respuesta el estado actual y las transiciones que sí son posibles.
-
-### Ejemplo
+Cualquier otro salto responde 409, con el estado actual y las transiciones que sí son posibles.
 
 ```bash
 curl -X POST http://localhost:3100/api/incidents \
@@ -112,8 +169,17 @@ curl -X POST http://localhost:3100/api/incidents \
 
 ## Documentación
 
-Toda la documentación del proceso está en [`docs/`](docs/): arquitectura, convención de ramas, deuda técnica, seguridad, dependencias y estrategia de release.
+| Documento | Qué responde |
+|---|---|
+| [`docs/arquitectura.md`](docs/arquitectura.md) | Cómo está armado el sistema y por qué |
+| [`docs/branching.md`](docs/branching.md) | Ramas, commits y Pull Requests |
+| [`docs/deuda-tecnica.md`](docs/deuda-tecnica.md) | Qué deuda hay, cuál se pagó y en qué orden va el resto |
+| [`docs/dependencias.md`](docs/dependencias.md) | Vulnerabilidades de paquetes y la decisión tomada con cada una |
+| [`docs/seguridad.md`](docs/seguridad.md) | Secretos, qué hacer ante una fuga y hallazgos de seguridad |
+| [`docs/release.md`](docs/release.md) | Ambientes, controles antes de prod y cómo volver atrás |
 
 ## Responsable
 
-Maynor Amílcar Poz Hernández — carné 2323759
+Maynor Amílcar Póz Hernández — carné 2323759
+
+Proyecto individual: el backlog, el código, la revisión y las aprobaciones de prod son de la misma persona.
