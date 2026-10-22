@@ -22,6 +22,7 @@ Cada deuda tiene un impacto, que es lo que pasa si no se paga, y un esfuerzo, qu
 | D8 | Pool de conexiones sin límites | PR 1 | Bajo | Bajo | Baja | Abierta |
 | D9 | Autor de los comentarios como texto libre | PR 3 | Bajo | Alto | Baja | Abierta |
 | D10 | Seed con ids escritos a mano | PR 3 | Bajo | Bajo | Baja | Abierta |
+| D11 | Sin migraciones: los cambios de esquema no llegan a bases existentes | PR 30 | Medio | Medio | Media | Abierta |
 
 ## Las deudas
 
@@ -44,6 +45,8 @@ Cada deuda tiene un impacto, que es lo que pasa si no se paga, y un esfuerzo, qu
 **D9. Autor de los comentarios como texto libre.** El autor de la bitácora es el nombre que se elige en el frontend y no una llave foránea, porque el proyecto no tiene login. Si un técnico cambia de nombre, sus comentarios viejos conservan el anterior. Pagarla implica tener usuarios autenticados, y eso quedó fuera del alcance.
 
 **D10. Seed con ids escritos a mano.** El seed asume que los ids empiezan en 1, cosa que solo se cumple con la base recién creada. Como el seed corre una sola vez, cuando Docker crea el volumen, hoy no causa problemas.
+
+**D11. Sin migraciones.** El esquema se aplica una sola vez, cuando Docker crea el volumen de la base. Mientras no cambie, no pasa nada; pero si una versión futura agrega una columna a `01-schema.sql`, los ambientes que ya existen no la reciben, y la API nueva fallaría contra la base vieja. Salió al escribir la estrategia de release. Se paga con una herramienta de migraciones que aplique en orden los cambios pendientes en cada despliegue.
 
 ## Deuda que ya se pagó
 
