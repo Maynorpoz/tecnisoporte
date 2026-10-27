@@ -46,7 +46,7 @@ Con eso las 28 altas desaparecieron. Quedan 19 moderadas, todas de `sprintf-js`.
 | Backend | 19 | 0 | 0 | 19 |
 | Frontend | 0 | 0 | 0 | 0 |
 
-## Las 19 que quedan: acepto el riesgo
+## Las 19 moderadas: acepté el riesgo
 
 `npm audit fix --force` propone resolverlas bajando a **jest 25**, una versión de 2019. Eso no es un arreglo: cambiaría una denegación de servicio en una herramienta de desarrollo por seis años de parches de seguridad sin aplicar, y casi con seguridad rompería la suite.
 
@@ -86,11 +86,28 @@ Las dependencias de producción del frontend pasaron de 8 a 47, porque Recharts 
 
 El peso sí era un problema: Recharts solo ocupa más que todo el resto de la aplicación. Por eso el dashboard se carga de forma diferida. El bundle principal quedó prácticamente igual, en 87 kB comprimido, y Recharts va en un archivo aparte de 108 kB que solo se descarga al abrir el dashboard.
 
+## Estado al cierre del proyecto
+
+La revisión de cierre, el 26 de octubre, encontró dos cambios respecto de lo anterior.
+
+**Apareció una vulnerabilidad alta en producción.** Un aviso nuevo marcó `body-parser` 1.20.8, la librería con la que Express lee el cuerpo de cada petición: denegación de servicio por bytes sobrantes después de un cuerpo comprimido ([GHSA-27r3-jxmh-p828](https://github.com/advisories/GHSA-27r3-jxmh-p828)). A diferencia de las anteriores, esta sí iba dentro de la imagen que corre en prod.
+
+El pipeline no la detuvo, porque su umbral es crítica. La encontró esta revisión manual, que existe justo para eso: cualquier vulnerabilidad en una dependencia de producción se atiende, sin importar la severidad. Quedó como Bug AB#67 y se corrigió en el PR 33 subiendo `body-parser` a 1.20.9, que es lo único que cambió. Las 94 pruebas siguieron pasando y salió como versión 1.0.2.
+
+**Las 19 moderadas de `sprintf-js` ya no aparecen.** El paquete sigue instalado en la cadena de Jest, pero el aviso ya no lo marca. No cambié nada para que desaparecieran.
+
+| Al cierre | Total | Críticas | Altas | Moderadas |
+|---|---|---|---|---|
+| Backend | 0 | 0 | 0 | 0 |
+| Frontend | 0 | 0 | 0 | 0 |
+
+Esto muestra por qué una revisión no basta: el estado de las dependencias cambia aunque el código no se toque, porque cada día se publican avisos nuevos.
+
 ## Cuándo lo vuelvo a mirar
 
 - Cada vez que el pipeline reporte una **crítica**, que detiene la entrega y hay que resolverla antes de seguir
 - Cada vez que una vulnerabilidad toque una dependencia de **producción**, sin importar la severidad, porque ahí sí llega a la imagen
-- Al cerrar el proyecto, para dejar el estado final documentado
+- Al cerrar el proyecto, para dejar el estado final documentado. Esta revisión se hizo el 26 de octubre y es la sección anterior
 
 ## Lo que no cubre este análisis
 

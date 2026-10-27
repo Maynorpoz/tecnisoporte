@@ -4,6 +4,13 @@ TecniSoporte sigue [versionado semántico](https://semver.org/lang/es/). Mientra
 
 Cada versión es un tag de git sobre el merge que cerró ese entregable. Las tres primeras se etiquetaron el 22 de octubre sobre commits que ya existían, cuando se definió esta convención; el mensaje de cada tag lo dice.
 
+## 1.0.2
+
+Merge del PR 33. Corrección de seguridad, sin cambios en el comportamiento de la aplicación.
+
+- `body-parser` sube de 1.20.8 a 1.20.9 por una vulnerabilidad alta de denegación de servicio en una dependencia de producción (Bug AB#67)
+- `docs/dependencias.md` registra el estado al cierre: cero vulnerabilidades en backend y frontend
+
 ## 1.0.1
 
 Merge del PR 32. Corrección del README, sin cambios en la aplicación.

@@ -1,6 +1,6 @@
 {
   "name": "tecnisoporte-backend",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "private": true,
   "description": "API REST de TecniSoporte",
   "main": "src/server.js",
