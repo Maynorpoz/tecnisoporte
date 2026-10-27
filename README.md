@@ -38,7 +38,7 @@ Cada PR necesita un work item vinculado, la autorevisión con sus comentarios re
 
 ## Requisitos
 
-- Node.js 20 o superior
+- Node.js 20.19 o superior, o 22.12 o superior. Vite 8 no compila con versiones anteriores
 - Docker Desktop con Docker Compose
 - Git
 
@@ -52,7 +52,9 @@ cp .env.example .env
 cp frontend/.env.example frontend/.env
 ```
 
-Edita los dos `.env` con tus valores locales. Ninguno se sube al repositorio. Qué es secreto y dónde vive cada cosa está en [`docs/seguridad.md`](docs/seguridad.md).
+En el `cmd` de Windows el comando es `copy` en lugar de `cp`, y la ruta va con barra invertida: `copy frontend\.env.example frontend\.env`.
+
+Edita los dos `.env` con tus valores locales. En el `.env` de la raíz, la misma contraseña va en `POSTGRES_PASSWORD` y dentro de las dos URL de conexión. Ninguno se sube al repositorio. Qué es secreto y dónde vive cada cosa está en [`docs/seguridad.md`](docs/seguridad.md).
 
 ## Ejecución
 
@@ -85,7 +87,7 @@ cd frontend && npm ci && npm run dev    # http://localhost:5173
 
 ### Pruebas
 
-Las pruebas usan su propia base, en otro contenedor, para no tocar los datos de desarrollo. La suite se niega a correr si el nombre de la base no termina en `_test`.
+Las pruebas usan su propia base, en otro contenedor y en el puerto 5436, para no tocar los datos de desarrollo. Es la que apunta `TEST_DATABASE_URL` en el `.env`. No hace falta tener encendida la base de desarrollo, y la suite se niega a correr si el nombre de la base no termina en `_test`.
 
 ```bash
 docker compose --env-file .env -f devops/docker-compose.test.yml up -d --wait

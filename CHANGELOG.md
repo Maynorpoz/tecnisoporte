@@ -4,6 +4,13 @@ TecniSoporte sigue [versionado semántico](https://semver.org/lang/es/). Mientra
 
 Cada versión es un tag de git sobre el merge que cerró ese entregable. Las tres primeras se etiquetaron el 22 de octubre sobre commits que ya existían, cuando se definió esta convención; el mensaje de cada tag lo dice.
 
+## 1.0.1
+
+Merge del PR 32. Corrección del README, sin cambios en la aplicación.
+
+- Las pruebas apuntan a su propia base en el puerto 5436, como dice el README y como ya hacían el pipeline y GitHub Actions. Antes la plantilla `.env.example` las mandaba a la base de desarrollo, y seguir el README daba `ECONNREFUSED` si esa base estaba apagada (Bug AB#66)
+- El README pide la versión de Node que de verdad exige Vite 8, y explica la instalación en el `cmd` de Windows
+
 ## 1.0.0
 
 Merge del PR 31. La versión de la entrega.
