@@ -22,7 +22,7 @@ El trabajo va en ramas temporales, nombradas con el id del work item y una descr
 - `fix/<id>-<descripcion>` para corregir errores
 - `refactor/<id>-<descripcion>` para pagar deuda técnica, sin cambiar comportamiento
 
-Por ejemplo `feature/32-estructura-inicial` o `fix/48-validacion-estados`.
+Por ejemplo `feature/32-estructura-inicial`, `refactor/51-manejo-errores` o `fix/65-audit-pipeline`.
 
 La rama se borra al mergear. El Pull Request conserva el nombre, así que el historial no se pierde.
 
@@ -50,14 +50,15 @@ Esos commits de corrección los dejo separados a propósito. Si hago squash al m
 
 ## Lo que protege main
 
-Las políticas configuradas en el repositorio son tres, y las tres bloquean el merge:
+Las políticas configuradas en el repositorio son cuatro, y las cuatro bloquean el merge:
 
 - Mínimo un revisor, con auto-aprobación permitida porque soy el único usuario.
 - Work item vinculado obligatorio.
 - Comentarios resueltos antes de completar.
-
-Desde la semana 2 se agrega una cuarta: el pipeline tiene que pasar en verde. Esa es la que convierte el PR en evidencia de validación real.
+- El pipeline en verde. Se agregó en la semana 2, cuando el pipeline existió, y es la que convierte el PR en evidencia de validación real.
 
 ## Cuando algo sale mal
 
 Si el pipeline falla o encuentro un error ya mergeado, no lo arreglo directo en `main`. Abro un Bug o una Task en el tablero, trabajo en una rama `fix/*` y entra por PR como todo lo demás. Es más lento, pero el historial queda completo y eso es justamente lo que se pide.
+
+Así se resolvieron los errores del proyecto: el Bug 47 de la falla controlada, el 65 del control de vulnerabilidades que no corría en Windows, el 66 del README que no permitía correr las pruebas y el 67 de la vulnerabilidad en `body-parser`. Los dos últimos se encontraron después de la versión 1.0.0 y salieron como versiones de parche, la 1.0.1 y la 1.0.2.
