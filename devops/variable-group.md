@@ -1,6 +1,6 @@
 # Variable Group `tecnisoporte-ci`
 
-El pipeline necesita la contraseña de la base de datos de pruebas. Esa contraseña no puede estar en `azure-pipelines.yml` porque el YAML vive en el repositorio, así que se guarda en un Variable Group de Azure DevOps.
+El pipeline necesita contraseñas de base de datos: la de pruebas y la de los ambientes. No pueden estar en `azure-pipelines.yml` porque el YAML vive en el repositorio, así que se guardan en un Variable Group de Azure DevOps.
 
 ## Cómo se crea
 
@@ -9,15 +9,18 @@ El pipeline necesita la contraseña de la base de datos de pruebas. Esa contrase
 - **Variable group name**: `tecnisoporte-ci`
 - Dejar activado **Allow access to all pipelines**
 
-Agregar una sola variable:
+Tiene dos variables:
 
-| Nombre | Valor | Secreto |
+| Nombre | Para qué | Secreto |
 |---|---|---|
-| `POSTGRES_PASSWORD` | la que se quiera para la base de pruebas | sí, con el candado cerrado |
+| `POSTGRES_PASSWORD` | La base de pruebas y las de dev y staging | sí, con el candado cerrado |
+| `POSTGRES_PASSWORD_PROD` | La base de prod. Se agregó con la entrega continua, en el PR 27 | sí, con el candado cerrado |
+
+Prod tiene su propia contraseña para que conocer la de dev o staging no alcance para entrar a la base de prod.
 
 El candado es lo importante. Con la variable marcada como secreta, Azure la enmascara incluso en los logs: si algún paso la imprimiera, saldría `***` en lugar del valor.
 
-## Por qué solo una variable
+## Por qué solo contraseñas
 
 La cadena de conexión completa se arma dentro del pipeline:
 
@@ -25,7 +28,7 @@ La cadena de conexión completa se arma dentro del pipeline:
 TEST_DATABASE_URL: postgresql://incident_user:$(POSTGRES_PASSWORD)@localhost:5436/tecnisoporte_test
 ```
 
-Así el único dato sensible es la contraseña. El usuario, el host, el puerto y el nombre de la base no son secretos y pueden estar a la vista.
+Así el único dato sensible es la contraseña. Lo mismo pasa en los ambientes: `devops/docker-compose.deploy.yml` arma la cadena de conexión dentro del stack a partir de la contraseña que le pasa el pipeline. El usuario, el host, el puerto y el nombre de la base no son secretos y pueden estar a la vista.
 
 ## Cosa importante de los secretos en Azure Pipelines
 
